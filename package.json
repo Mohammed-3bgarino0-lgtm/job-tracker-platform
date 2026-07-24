@@ -1,0 +1,16 @@
+{
+  "name": "job-platform-mohammed-alsakran",
+  "version": "1.0.0",
+  "description": "منصة التوظيف والتقديم التلقائي الشاملة - تطبيق الويندوز",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build-win": "electron-packager . JobPlatform_MohammedAlSakran --platform=win32 --arch=x64 --overwrite"
+  },
+  "keywords": ["job-tracker", "auto-apply", "windows-app"],
+  "author": "Mohammed H. Al-Sakran",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^30.0.0"
+  }
+}
