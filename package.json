@@ -1,0 +1,29 @@
+{
+  "name": "qaddem-ai-monorepo",
+  "version": "1.4.0",
+  "private": true,
+  "description": "منصة قدّم | Qaddem AI - المساعد الذكي للبحث عن الوظائف وتعبئة الطلبات",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "dependencies": {
+    "@prisma/client": "^5.10.0",
+    "next": "^14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.0",
+    "prisma": "^5.10.0",
+    "typescript": "^5.3.3"
+  }
+}
