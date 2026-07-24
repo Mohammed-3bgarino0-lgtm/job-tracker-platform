@@ -1,21 +1,20 @@
 import type { Metadata } from 'next';
-import '../../../app/globals.css';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'قدّم | Qaddem AI - المساعد الذكي للتوظيف',
-  description: 'منصة قدّم AI لبناء السيرة الذاتية وتعبئة طلبات التوظيف بموافقات صريحة.',
+  title: 'قدّم | Qaddem AI - مراجعة السيرة الذاتية',
+  description:
+    'رفع السيرة الذاتية وتحليلها مع مراجعة يدوية كاملة ودون بيانات وهمية.',
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
     <html lang="ar" dir="rtl">
-      <body className="bg-slate-50 text-slate-900 min-h-screen antialiased">
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
