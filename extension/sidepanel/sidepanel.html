@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>مساعد قدّم الجانبي | Wdhifaa Adapter</title>
+    <style>
+        body {
+            font-family: 'Tajawal', system-ui, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            padding: 14px;
+            margin: 0;
+        }
+        .header {
+            background: linear-gradient(135deg, #064e3b, #065f46);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 14px;
+        }
+        .header h3 { margin: 0; font-size: 15px; font-weight: 800; }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background: #065f46;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+        .btn:hover { background: #064e3b; }
+        .btn-outline { background: white; color: #065f46; border: 1px solid #a7f3d0; }
+        .job-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        .channel-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .tag-email { background: #d1fae5; color: #065f46; }
+        .tag-whatsapp { background: #dcfce7; color: #15803d; }
+        .tag-form { background: #dbeafe; color: #1e40af; }
+        .tag-ocr { background: #fef3c7; color: #b45309; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h3>📌 قدّم | محول @Wdhifaa على X</h3>
+        <span style="font-size: 10px;">سحب وتصنيف المنشورات وتنزيل مسودات EML</span>
+    </div>
+
+    <button class="btn" onclick="scrapeWdhifaaPosts()"><i class="fa-solid fa-cloud-arrow-down"></i> سحب وظائف @Wdhifaa الظاهرة</button>
+    <button class="btn btn-outline" onclick="downloadEMLDraft()"><i class="fa-solid fa-file-export"></i> تنزيل مسودة EML مع السيرة المرفقة</button>
+
+    <div style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
+        <h4 style="font-size: 13px; font-weight: 800; margin-bottom: 8px;">الفرص المسحوبة والمصنفة:</h4>
+        <div id="wdhifaa-scraped-list">
+            <!-- Dynamic jobs list injected here -->
+        </div>
+    </div>
+
+    <script src="../adapters/wdhifaa-adapter.js"></script>
+    <script src="sidepanel.js"></script>
+</body>
+</html>
