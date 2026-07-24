@@ -5,9 +5,12 @@ import { useState } from 'react';
 import { ResumeReviewForm } from './ResumeReviewForm';
 
 interface ParseResponse {
-  extractionId: string;
+  extractionId: string | null;
   confidenceScore: number;
   data: ParsedResumeData;
+  canApprove: boolean;
+  mode: 'preview' | 'persisted';
+  databaseConfigured: boolean;
   storage: {
     persisted: boolean;
     message: string;
@@ -16,7 +19,6 @@ interface ParseResponse {
 }
 
 export function ResumeWorkflow() {
-  const [userId, setUserId] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ParseResponse | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -24,8 +26,8 @@ export function ResumeWorkflow() {
   const [error, setError] = useState<string | null>(null);
 
   async function uploadResume() {
-    if (!file || !userId.trim()) {
-      setError('اختر ملف السيرة وأدخل معرف المستخدم.');
+    if (!file) {
+      setError('اختر ملف السيرة أولًا.');
       return;
     }
 
@@ -37,7 +39,6 @@ export function ResumeWorkflow() {
     try {
       const formData = new FormData();
       formData.set('file', file);
-      formData.set('userId', userId.trim());
 
       const response = await fetch('/api/resumes/parse', {
         method: 'POST',
@@ -89,38 +90,24 @@ export function ResumeWorkflow() {
               ارفع سيرتك للتحليل
             </h2>
             <p className="mt-2 text-sm leading-7 text-slate-500">
-              يتم استخراج النص في ذاكرة الخادم فقط. الملف نفسه لا يُحفظ
-              حتى يتم ربط التخزين السحابي.
+              يمكنك تحليل السيرة ومعاينة البيانات الآن دون حساب. الحفظ النهائي
+              سيتاح بعد ربط قاعدة البيانات وتسجيل الدخول.
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
-            <label>
-              <span className="mb-1.5 block text-xs font-bold text-slate-700">
-                معرف المستخدم
-              </span>
-              <input
-                value={userId}
-                onChange={(event) => setUserId(event.target.value)}
-                placeholder="معرف مستخدم موجود في قاعدة البيانات"
-                className="w-full rounded-xl border border-slate-200 px-3 py-3 text-sm outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-              />
-            </label>
-
-            <label>
-              <span className="mb-1.5 block text-xs font-bold text-slate-700">
-                ملف السيرة
-              </span>
-              <input
-                type="file"
-                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={(event) =>
-                  setFile(event.target.files?.[0] ?? null)
-                }
-                className="w-full rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2.5 text-sm"
-              />
-            </label>
-          </div>
+          <label className="block">
+            <span className="mb-1.5 block text-xs font-bold text-slate-700">
+              ملف السيرة
+            </span>
+            <input
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={(event) =>
+                setFile(event.target.files?.[0] ?? null)
+              }
+              className="w-full rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2.5 text-sm"
+            />
+          </label>
 
           {error ? (
             <p className="mt-4 rounded-xl bg-rose-50 p-3 text-sm font-bold text-rose-700">
@@ -132,7 +119,7 @@ export function ResumeWorkflow() {
             type="button"
             onClick={uploadResume}
             disabled={isUploading}
-            className="mt-5 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-black text-white transition hover:bg-emerald-800"
+            className="mt-5 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-black text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isUploading ? 'جارٍ التحليل...' : 'تحليل السيرة'}
           </button>
@@ -141,9 +128,7 @@ export function ResumeWorkflow() {
         <>
           <div className="rounded-2xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-900">
             متوسط الثقة في الحقول الموجودة:{' '}
-            <strong>
-              {Math.round(result.confidenceScore * 100)}%
-            </strong>
+            <strong>{Math.round(result.confidenceScore * 100)}%</strong>
             <span className="mt-1 block text-xs text-sky-700">
               {result.storage.message}
             </span>
@@ -151,7 +136,8 @@ export function ResumeWorkflow() {
 
           <ResumeReviewForm
             extractionId={result.extractionId}
-            userId={userId.trim()}
+            userId={null}
+            canApprove={result.canApprove}
             initialData={result.data}
             onConfirmed={() => setIsConfirmed(true)}
           />
