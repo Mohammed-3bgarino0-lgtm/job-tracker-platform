@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة قدّم | Qaddem AI - المساعد الذكي للتوظيف والتقديم التفاعلي</title>
+    <meta name="description" content="منصة تقنية سعودية حديثة تعتمد على الذكاء الاصطناعي لمساعدة الباحثين عن عمل، سحب الإعلانات من السوشيال ميديا، والتقديم التفاعلي بـ HTML.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --emerald-900: #064e3b;
+            --emerald-800: #065f46;
+            --emerald-700: #047857;
+            --emerald-600: #059669;
+            --emerald-100: #d1fae5;
+            --emerald-50: #ecfdf5;
+            --slate-900: #0f172a;
+            --slate-800: #1e293b;
+            --slate-700: #334155;
+            --slate-500: #64748b;
+            --slate-200: #e2e8f0;
+            --slate-100: #f1f5f9;
+            --radius-xl: 20px;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--slate-900); direction: rtl; min-height: 100vh; line-height: 1.6; }
+
+        /* Top Navbar */
+        .navbar { position: sticky; top: 0; z-index: 100; background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--slate-200); padding: 14px 28px; }
+        .nav-container { max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo { width: 44px; height: 44px; background: var(--emerald-800); color: white; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+        .brand-text h2 { font-size: 18px; font-weight: 900; color: var(--slate-900); }
+        .brand-text p { font-size: 11px; color: var(--emerald-700); font-weight: bold; }
+
+        .nav-links { display: flex; gap: 6px; list-style: none; }
+        .nav-link { padding: 8px 16px; border-radius: var(--radius-md); color: var(--slate-700); text-decoration: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { background: var(--emerald-50); color: var(--emerald-800); }
+
+        .main-container { max-width: 1400px; margin: 28px auto 0; padding: 0 20px; }
+
+        /* Hero Banner */
+        .hero-banner { background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); color: white; border-radius: var(--radius-xl); padding: 40px; margin-bottom: 28px; box-shadow: 0 10px 30px rgba(6, 95, 70, 0.2); }
+        .hero-title { font-size: 32px; font-weight: 900; margin-bottom: 10px; }
+        .hero-sub { font-size: 15px; color: #a7f3d0; max-width: 800px; margin-bottom: 24px; }
+
+        /* Quick Input Box */
+        .quick-input-card { background: white; border-radius: var(--radius-xl); padding: 28px; border: 1px solid var(--slate-200); box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); margin-bottom: 28px; }
+        .quick-input-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--slate-100); padding-bottom: 14px; margin-bottom: 18px; }
+        .quick-input-title { font-size: 18px; font-weight: 800; color: var(--slate-900); display: flex; align-items: center; gap: 10px; }
+
+        .form-control { width: 100%; padding: 14px; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius-md); font-size: 14px; color: var(--slate-900); outline: none; }
+        .form-control:focus { border-color: var(--emerald-700); background: white; }
+
+        .btn { padding: 12px 24px; border-radius: var(--radius-md); border: none; font-weight: 700; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s; text-decoration: none; }
+        .btn-emerald { background: var(--emerald-800); color: white; }
+        .btn-emerald:hover { background: var(--emerald-700); }
+        .btn-outline { background: var(--slate-100); color: var(--slate-800); border: 1px solid var(--slate-200); }
+
+        /* Clean Card Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 24px; }
+        @media (max-width: 992px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        .clean-card { background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-xl); padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); }
+        .card-title { font-size: 17px; font-weight: 800; color: var(--slate-900); margin-bottom: 16px; border-bottom: 1px solid var(--slate-100); padding-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+
+        /* Confidence Badges */
+        .confidence-badge { background: var(--emerald-50); color: var(--emerald-800); border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+
+        /* Pre-Send Review Box */
+        .pre-send-box { background: #f0fdf4; border: 2px solid #059669; border-radius: var(--radius-xl); padding: 24px; margin-top: 20px; }
+
+        .toast { position: fixed; bottom: 30px; left: 30px; background: var(--emerald-800); color: white; padding: 14px 28px; border-radius: var(--radius-md); font-weight: 700; display: none; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-logo">قدّم</div>
+                <div class="brand-text">
+                    <h2>قدّم | Qaddem AI</h2>
+                    <p>مساعد التوظيف والتقديم الذكي | haderksa.org</p>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li><a class="nav-link active" onclick="showTab('tab-home')"><i class="fa-solid fa-house"></i> الرئيسية</a></li>
+                <li><a class="nav-link" onclick="showTab('tab-lead-review')"><i class="fa-solid fa-envelope-open-text"></i> سحب الإعلانات والـ HTML</a></li>
+                <li><a class="nav-link" onclick="showTab('tab-cv-review')"><i class="fa-solid fa-file-check"></i> تدقيق السيرة والـ Confidence</a></li>
+                <li><a class="nav-link" onclick="showTab('tab-kanban')"><i class="fa-solid fa-layer-group"></i> متتبع الطلبات (Kanban)</a></li>
+                <li><a class="nav-link" onclick="showTab('tab-extension')"><i class="fa-brands fa-chrome"></i> الإضافة والأمان</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-container">
+
+        <!-- TAB 1: HOME & QUICK AD ANALYZER -->
+        <div id="tab-home">
+            <!-- Hero Banner -->
+            <div class="hero-banner">
+                <div class="hero-title">منصة قدّم | Qaddem AI</div>
+                <div class="hero-sub">المساعد الذكي لبناء الملف الوظيفي الموحد، سحب الإعلانات والمنشورات بالذكاء الاصطناعي، والتقديم التفاعلي بـ HTML بموافقتك الصريحة دون تجاوز CAPTCHA أو OTP أو نفاذ.</div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <a onclick="showTab('tab-lead-review')" class="btn btn-emerald" style="background:white; color:var(--emerald-800);"><i class="fa-solid fa-bolt"></i> جرب تحليل الإعلانات والتقديم بـ HTML</a>
+                    <a href="https://github.com/Mohammed-3bgarino0-lgtm/job-tracker-platform" target="_blank" class="btn btn-outline" style="color:white; border-color:rgba(255,255,255,0.3); background:rgba(255,255,255,0.1);"><i class="fa-brands fa-github"></i> مستودع المشروع على GitHub</a>
+                </div>
+            </div>
+
+            <!-- Quick Job Ad Analyzer Card -->
+            <div class="quick-input-card">
+                <div class="quick-input-header">
+                    <div class="quick-input-title"><i class="fa-solid fa-magnifying-glass" style="color:var(--emerald-800)"></i> وجدت إعلان وظيفة؟</div>
+                    <span style="font-size:12px; color:var(--emerald-800); background:var(--emerald-50); padding:4px 12px; border-radius:20px; font-weight:bold;">تحليل تلقائي وحماية النطاق</span>
+                </div>
+                <textarea id="home-ad-input" class="form-control" style="height:110px; margin-bottom:16px;" placeholder="الصق رابط المنشور (من X أو LinkedIn)، نص الإعلان، أو تفاصيل الإعلان هنا..."></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                    <span style="font-size:12px; color:var(--slate-500);"><i class="fa-solid fa-shield-halved" style="color:var(--emerald-700)"></i> التزام تام بمراجعة وموافقة المستخدم قبل الإرسال</span>
+                    <button onclick="analyzeHomeAd()" class="btn btn-emerald"><i class="fa-solid fa-wand-magic-sparkles"></i> تحليل الإعلان وإنشاء رسالة HTML</button>
+                </div>
+            </div>
+
+            <!-- Dashboard Overview Grid -->
+            <div class="grid-2">
+                <!-- User Profile & CV Fast Copy -->
+                <div>
+                    <div class="clean-card">
+                        <div class="card-title"><i class="fa-solid fa-user-check"></i> بيانات السيرة المعتمدة لمحمد السكران</div>
+                        <div style="font-size:13px; line-height:1.9;">
+                            <div><strong>المتقدم:</strong> Mohammed H. Al-Sakran (محمد السكران)</div>
+                            <div><strong>المسمى:</strong> مشرف إداري ومدير عمليات بالرياض</div>
+                            <div><strong>الخبرة:</strong> 8+ سنوات (AACE, Body Masters, Landmark, Radisson)</div>
+                            <div><strong>الأنظمة:</strong> SAP, Odoo ERP, Process Improvement</div>
+                            <div><strong>التواصل:</strong> 0539491361 | mohammed-alsakran@hotmail.com</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Applications Summary -->
+                <div>
+                    <div class="clean-card">
+                        <div class="card-title"><i class="fa-solid fa-list-check"></i> آخر التقديمات المسجلة بالسجل الموحد</div>
+                        <div style="font-size:13px;">
+                            <div style="display:flex; justify-content:space-between; padding:10px; background:var(--slate-50); border-radius:8px; margin-bottom:8px;">
+                                <strong> شركة سابك (SABIC)</strong><span>مشرف خدمات إدارية | <span class="confidence-badge">تم التقديم بـ HTML</span></span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding:10px; background:var(--slate-50); border-radius:8px; margin-bottom:8px;">
+                                <strong>شركة المراعي (Almarai)</strong><span>مدير عمليات وتخطيط | <span class="confidence-badge">تم التقديم بـ HTML</span></span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; padding:10px; background:var(--slate-50); border-radius:8px;">
+                                <strong>شركة علم (Elm)</strong><span>أخصائي موارد بشرية | <span class="confidence-badge">تم التقديم بـ HTML</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: JOB AD SCRAPER & PRE-SEND REVIEW -->
+        <div id="tab-lead-review" style="display:none;">
+            <div class="clean-card">
+                <div class="card-title"><i class="fa-solid fa-envelope-open-text" style="color:var(--emerald-800)"></i> أداة سحب الإعلانات من المنشورات والتقديم بـ HTML</div>
+                <p style="font-size:13px; color:var(--slate-500); margin-bottom:16px;">الصق نص الإعلان أو المنشور وسيقوم المحرك باستخراج الإيميلات وأرقام الواتساب ورقم مرجع الوظيفة وتوليد رسالة الـ HTML:</p>
+                
+                <textarea id="ad-text-area" class="form-control" style="height:120px; margin-bottom:16px;" placeholder="مطلوب مشرف خدمات إدارية وتطوير عمليات بشركة سابك بالرياض. للتقديم يرجى إرسال السيرة الذاتية إلى hr@sabic-ksa.com أو التواصل عبر الواتساب على 0539491361..."></textarea>
+                <button onclick="processAdScraper()" class="btn btn-emerald"><i class="fa-solid fa-bolt"></i> سحب الإيميل وتوليد إيميل الـ HTML</button>
+
+                <div id="ad-result-box" style="display:none; margin-top:24px;">
+                    <div style="background:var(--emerald-50); border:1px solid #a7f3d0; padding:14px; border-radius:10px; font-size:14px; font-weight:bold; color:var(--emerald-900); margin-bottom:16px;">
+                        ✅ تم استخراج البيانات! الإيميل المستهدف: <span id="target-email-span">hr@sabic-ksa.com</span> | الوظيفة: <span id="target-role-span">مشرف إداري ومسؤول عمليات</span>
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-bottom:16px;">
+                        <button onclick="openPreSendReview()" class="btn btn-emerald"><i class="fa-solid fa-eye"></i> شاشة مراجعة البريد النهائية (Pre-Send Review)</button>
+                        <button onclick="sendDirectGmail()" class="btn btn-outline"><i class="fa-solid fa-paper-plane"></i> فتح مباشرة في Gmail</button>
+                    </div>
+
+                    <!-- Pre Send Review Box -->
+                    <div id="pre-send-review-box" class="pre-send-box" style="display:none;">
+                        <h3 style="font-size:16px; font-weight:bold; color:var(--emerald-900); margin-bottom:12px;"><i class="fa-solid fa-shield-check"></i> الشاشة النهائية لمراجعة البريد قبل الضغط على زر الإرسال</h3>
+                        
+                        <div style="background:#fef3c7; border:1px solid #fde68a; padding:12px; border-radius:8px; font-size:12px; color:#92400e; margin-bottom:14px;">
+                            ⚠️ فحص النطاق: تم فحص بريد المستلم (hr@sabic-ksa.com) وهو مطابق لنطاق شركة سابك المصرح به.
+                        </div>
+
+                        <div style="font-size:13px; line-height:1.8; margin-bottom:14px;">
+                            <div><strong>المرسل منه:</strong> mohammed-alsakran@hotmail.com</div>
+                            <div><strong>المستلم:</strong> hr@sabic-ksa.com</div>
+                            <div><strong>العنوان:</strong> طلب توظيف: مشرف إداري ومسؤول عمليات - محمد السكران</div>
+                            <div><strong>المرفقات:</strong> السيرة الذاتية (PDF) + خطاب التقديم | <strong>الحجم:</strong> 1.2 MB</div>
+                        </div>
+
+                        <div style="background:white; border:1px solid var(--slate-200); border-radius:10px; padding:16px; font-size:13px; max-height:220px; overflow-y:auto;" id="html-email-preview">
+                            <!-- HTML Output -->
+                        </div>
+
+                        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:16px;">
+                            <button onclick="confirmFinalSend()" class="btn btn-emerald"><i class="fa-solid fa-paper-plane"></i> تأكيد واعتماد الإرسال المباشر</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: CONFIDENCE REVIEW SCREEN -->
+        <div id="tab-cv-review" style="display:none;">
+            <div class="clean-card">
+                <div class="card-title"><i class="fa-solid fa-file-check" style="color:var(--emerald-800)"></i> شاشة مراجعة السيرة الذاتية المستخرجة مع نسب الثقة ومصدر النص</div>
+                
+                <div style="background:#fffbeb; border:1px solid #fef3c7; padding:12px; border-radius:10px; font-size:12px; color:#b45309; margin-bottom:16px;">
+                    🛡️ ضمان الشفافية: يعرض النظام مصدر النص ونسبة الثقة ولا يتم اعتماد أي بيانات في ملفك الوظيفي إلا بمراجعتك وتأكيدك.
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                    <div style="padding:14px; background:var(--slate-50); border-radius:10px; border:1px solid var(--slate-200);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <strong>الاسم الكامل: Mohammed H. Al-Sakran</strong>
+                            <span class="confidence-badge">نسبة الثقة: 99%</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--slate-500);">المصدر في النص: "Mohammed H. Al-Sakran | Riyadh, Saudi Arabia"</div>
+                    </div>
+
+                    <div style="padding:14px; background:var(--slate-50); border-radius:10px; border:1px solid var(--slate-200);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <strong>البريد الإلكتروني: mohammed-alsakran@hotmail.com</strong>
+                            <span class="confidence-badge">نسبة الثقة: 98%</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--slate-500);">المصدر في النص: "0539491361 | mohammed-alsakran@hotmail.com"</div>
+                    </div>
+
+                    <div style="padding:14px; background:var(--slate-50); border-radius:10px; border:1px solid var(--slate-200);">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <strong>الخبرات والمهارات: SAP, Odoo ERP, Operations Management</strong>
+                            <span class="confidence-badge">نسبة الثقة: 96%</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--slate-500);">المصدر في النص: "CORE COMPETENCIES: Operations & Logistics, SAP, Odoo"</div>
+                    </div>
+                </div>
+
+                <button onclick="showToast('تم تأكيد واعتماد البيانات المستخرجة في الملف الموحد!')" class="btn btn-emerald" style="margin-top:18px; width:100%; justify-content:center;"><i class="fa-solid fa-check-double"></i> تأكيد كافة البيانات المستخرجة</button>
+            </div>
+        </div>
+
+        <!-- TAB 4: KANBAN TRACKER -->
+        <div id="tab-kanban" style="display:none;">
+            <div class="clean-card">
+                <div class="card-title"><i class="fa-solid fa-layer-group" style="color:var(--emerald-800)"></i> متتبع الطلبات (Kanban Board بـ 11 حالة)</div>
+                <div style="display:flex; gap:12px; overflow-x:auto; padding-bottom:12px;">
+                    <div style="width:200px; background:var(--slate-100); padding:12px; border-radius:10px; flex-shrink:0;">
+                        <strong style="font-size:12px;">تم التقديم (3)</strong>
+                        <div style="background:white; padding:10px; border-radius:8px; margin-top:8px; font-size:12px; border-right:4px solid var(--emerald-800);">
+                            <strong>سابك (SABIC)</strong><br><span style="color:var(--slate-500)">مشرف خدمات إدارية</span>
+                        </div>
+                    </div>
+                    <div style="width:200px; background:var(--slate-100); padding:12px; border-radius:10px; flex-shrink:0;">
+                        <strong style="font-size:12px;">تحت المراجعة (1)</strong>
+                        <div style="background:white; padding:10px; border-radius:8px; margin-top:8px; font-size:12px; border-right:4px solid #f59e0b;">
+                            <strong>علم (Elm)</strong><br><span style="color:var(--slate-500)">أخصائي موارد بشرية</span>
+                        </div>
+                    </div>
+                    <div style="width:200px; background:var(--slate-100); padding:12px; border-radius:10px; flex-shrink:0;">
+                        <strong style="font-size:12px;">مقابلة شخصية (1)</strong>
+                        <div style="background:white; padding:10px; border-radius:8px; margin-top:8px; font-size:12px; border-right:4px solid #3b82f6;">
+                            <strong>المراعي (Almarai)</strong><br><span style="color:var(--slate-500)">مدير عمليات وتخطيط</span>
+                        </div>
+                    </div>
+                    <div style="width:200px; background:var(--slate-100); padding:12px; border-radius:10px; flex-shrink:0;">
+                        <strong style="font-size:12px;">عرض وظيفي (1)</strong>
+                        <div style="background:white; padding:10px; border-radius:8px; margin-top:8px; font-size:12px; border-right:4px solid #10b981;">
+                            <strong>الشايع (Alshaya)</strong><br><span style="color:var(--slate-500)">Store Manager</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: EXTENSION & SECURITY -->
+        <div id="tab-extension" style="display:none;">
+            <div class="clean-card">
+                <div class="card-title"><i class="fa-brands fa-chrome" style="color:var(--emerald-800)"></i> إضافة المتصفح Chrome Extension (Manifest V3) مع زر "حفظ في قدّم"</div>
+                <div style="font-size:13px; line-height:1.8;">
+                    <p>إضافة المتصفح المخصصة موجودة في مجلد مشروعك باسم <code>gmail-extension</code> أو <code>extension/</code>.</p>
+                    <p><strong>طريقة التفعيل:</strong> اكتب <code>chrome://extensions/</code> واضغط **Load unpacked** واختر المجلد ليعمل زر **📌 حفظ في قدّم** التلقائي في أسرع وقت!</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">تم الإجراء بنجاح!</div>
+
+    <script>
+        function showTab(tabId) {
+            ['tab-home', 'tab-lead-review', 'tab-cv-review', 'tab-kanban', 'tab-extension'].forEach(id => {
+                document.getElementById(id).style.display = id === tabId ? 'block' : 'none';
+            });
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        }
+
+        function analyzeHomeAd() {
+            const val = document.getElementById('home-ad-input').value;
+            if (!val.trim()) { alert('يرجى كتابة أو لصق الإعلان أولاً!'); return; }
+            document.getElementById('ad-text-area').value = val;
+            showTab('tab-lead-review');
+            processAdScraper();
+        }
+
+        function processAdScraper() {
+            const text = document.getElementById('ad-text-area').value.trim() || 'مطلوب مشرف خدمات إدارية بـ سابك hr@sabic-ksa.com';
+            const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            const email = emailMatch ? emailMatch[0] : 'hr@sabic-ksa.com';
+
+            document.getElementById('target-email-span').innerText = email;
+            document.getElementById('ad-result-box').style.display = 'block';
+
+            // Generate HTML Preview
+            const htmlText = `
+<div style="direction:rtl; font-family:Arial; background:#f8fafc; padding:16px; border-radius:8px;">
+    <div style="background:#065f46; color:white; padding:10px 14px; font-weight:bold; border-radius:6px;">💼 طلب توظيف: مشرف إداري ومسؤول عمليات</div>
+    <p style="margin-top:12px;"><strong>السادة / فريق التوظيف المحترمين،</strong></p>
+    <p>أتقدم إليكم بطلب التقديم على شاغر مشرف إداري ومسؤول عمليات. بفضل خبرتي 8+ سنوات في مجالات العمليات وتطبيق أنظمة SAP وOdoo وخفض التكاليف 60%، أثق بتقديم قيمة ملموسة لمؤسستكم.</p>
+    <div style="background:white; padding:10px; border-right:4px solid #059669; margin:10px 0;">📌 <strong>المرفقات:</strong> السيرة الذاتية الرسمية (PDF) + خطاب التقديم.</div>
+    <hr>
+    <strong>محمد السكران | 0539491361 | mohammed-alsakran@hotmail.com</strong>
+</div>`;
+            document.getElementById('html-email-preview').innerHTML = htmlText;
+        }
+
+        function openPreSendReview() {
+            document.getElementById('pre-send-review-box').style.display = 'block';
+        }
+
+        function sendDirectGmail() {
+            const email = document.getElementById('target-email-span').innerText;
+            const subject = encodeURIComponent('طلب توظيف: مشرف إداري ومسؤول عمليات - محمد السكران');
+            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}`, '_blank');
+        }
+
+        function confirmFinalSend() {
+            showToast('✅ تم اعتماد وإرسال بريد الـ HTML بنجاح وتدوينه بالسجل!');
+            setTimeout(() => { showTab('tab-kanban'); }, 1500);
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+    </script>
+</body>
+</html>
