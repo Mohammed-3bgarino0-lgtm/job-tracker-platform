@@ -5,7 +5,7 @@
   "description": "منصة قدّم | Qaddem AI - المساعد الذكي للبحث عن الوظائف وتعبئة الطلبات",
   "packageManager": "pnpm@11.15.1",
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "dev": "pnpm --filter @qaddem/web dev",
