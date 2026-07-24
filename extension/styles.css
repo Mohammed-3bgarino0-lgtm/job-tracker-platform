@@ -1,0 +1,23 @@
+/* Floating "Save to Qaddem" Button Styles */
+.qaddem-floating-btn {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    z-index: 999999;
+    background: linear-gradient(135deg, #065f46, #047857);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    padding: 12px 20px;
+    border-radius: 30px;
+    font-family: 'Tajawal', sans-serif;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+}
+
+.qaddem-floating-btn:hover {
+    transform: scale(1.05);
+    background: #065f46;
+}

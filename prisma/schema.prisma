@@ -1,0 +1,582 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  SUPPORT
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum OutboundChannel {
+  EMAIL
+  WHATSAPP_LINK
+  WHATSAPP_BUSINESS_API
+  SMS
+  PHONE_CALL
+  MANUAL_CONTACT
+}
+
+enum OutboundStatus {
+  DRAFT
+  READY_FOR_REVIEW
+  PENDING_APPROVAL
+  SCHEDULED
+  SENT
+  DELIVERED
+  FAILED
+  INVALID_EMAIL
+  REPLY_RECEIVED
+  NEEDS_FOLLOW_UP
+}
+
+enum KanbanStatus {
+  SUGGESTED
+  SAVED
+  READY
+  NEEDS_REVIEW
+  APPLIED
+  UNDER_REVIEW
+  TEST
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+model User {
+  id                String             @id @default(uuid())
+  email             String             @unique
+  phone             String?            @unique
+  passwordHash      String
+  role              Role               @default(USER)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  userProfile       UserProfile?
+  careerProfiles    CareerProfile[]
+  resumes           Resume[]
+  applications      Application[]
+  jobLeads          JobLead[]
+  sendingAccounts   SendingAccount[]
+  outboundMessages  OutboundMessage[]
+  consents          Consent[]
+  auditLogs         AuditLog[]
+  supportTickets    SupportTicket[]
+  browserDevices    BrowserDevice[]
+  subscriptions     Subscription[]
+  jobPreferences    JobPreference?
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName         String
+  lastName          String
+  englishName       String?
+  city              String?
+  country           String?  @default("Saudi Arabia")
+  nationality       String?
+  dateOfBirth       DateTime?
+  headline          String?
+  bio               String?
+  experienceYears   Int?
+  isTwoFactorActive Boolean  @default(false)
+
+  @@map("user_profiles")
+}
+
+model CareerProfile {
+  id             String         @id @default(uuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  domain         String
+  isDefault      Boolean        @default(false)
+  experiences    Experience[]
+  education      Education[]
+  skills         Skill[]
+  certifications Certification[]
+  languages      Language[]
+
+  @@map("career_profiles")
+}
+
+model Resume {
+  id               String             @id @default(uuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName         String
+  fileUrl          String
+  mimeType         String
+  fileSize         Int
+  createdAt        DateTime           @default(now())
+  versions         ResumeVersion[]
+  extractions      ResumeExtraction[]
+
+  @@map("resumes")
+}
+
+model ResumeVersion {
+  id               String   @id @default(uuid())
+  resumeId         String
+  resume           Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  versionName      String
+  targetDomain     String
+  fileUrl          String
+  createdAt        DateTime @default(now())
+
+  @@map("resume_versions")
+}
+
+model ResumeExtraction {
+  id                String   @id @default(uuid())
+  resumeId          String
+  resume            Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  extractedField    String
+  extractedValue    String
+  confidenceScore   Float
+  snippetSource     String
+  isApproved        Boolean  @default(false)
+
+  @@map("resume_extractions")
+}
+
+model Education {
+  id              String         @id @default(uuid())
+  careerProfileId String
+  careerProfile   CareerProfile  @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  degree          String
+  fieldOfStudy    String
+  institution     String
+  gpa             String?
+  graduationYear  Int?
+
+  @@map("education")
+}
+
+model Experience {
+  id              String         @id @default(uuid())
+  careerProfileId String
+  careerProfile   CareerProfile  @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  jobTitle        String
+  companyName     String
+  startDate       DateTime
+  endDate         DateTime?
+  isCurrent       Boolean        @default(false)
+  responsibilities String
+
+  @@map("experiences")
+}
+
+model Skill {
+  id              String         @id @default(uuid())
+  careerProfileId String
+  careerProfile   CareerProfile  @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  name            String
+  category        String
+  proficiency     String?
+
+  @@map("skills")
+}
+
+model Certification {
+  id              String         @id @default(uuid())
+  careerProfileId String
+  careerProfile   CareerProfile  @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  name            String
+  issuingOrg      String
+  issueDate       DateTime?
+
+  @@map("certifications")
+}
+
+model Language {
+  id              String         @id @default(uuid())
+  careerProfileId String
+  careerProfile   CareerProfile  @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  name            String
+  proficiency     String
+
+  @@map("languages")
+}
+
+model JobPreference {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expectedSalary   String?
+  preferredJobType String?
+  relocationReady  Boolean  @default(false)
+
+  @@map("job_preferences")
+}
+
+model JobSource {
+  id          String   @id @default(uuid())
+  name        String
+  baseUrl     String
+  leads       JobLead[]
+
+  @@map("job_sources")
+}
+
+model ConnectedAccount {
+  id            String   @id @default(uuid())
+  provider      String
+  accountName   String
+  createdAt     DateTime @default(now())
+
+  @@map("connected_accounts")
+}
+
+model Job {
+  id                 String       @id @default(uuid())
+  title              String
+  companyName        String
+  city               String?
+  country            String?
+  workType           String?
+  salary             String?
+  description        String
+  responsibilities   String?
+  requirements       String?
+  requiredExperience String?
+  closingDate        DateTime?
+  sourceUrl          String?
+  matches            JobMatch[]
+  applications       Application[]
+  savedJobs          SavedJob[]
+
+  @@map("jobs")
+}
+
+model JobMatch {
+  id                 String   @id @default(uuid())
+  jobId              String
+  job                Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  totalMatchScore    Float
+  matchingSkills     String[]
+  missingSkills      String[]
+  missingRequirements String[]
+  suggestions        String[]
+  warningDisclaimer  String
+
+  @@map("job_matches")
+}
+
+model SavedJob {
+  id        String   @id @default(uuid())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("saved_jobs")
+}
+
+model Application {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId            String
+  job              Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status           KanbanStatus      @default(SUGGESTED)
+  appliedAt        DateTime?
+  followUpDate     DateTime?
+  notes            String?
+  outboundMessages OutboundMessage[]
+  interviews       Interview[]
+
+  @@map("applications")
+}
+
+model ApplicationAnswer {
+  id       String @id @default(uuid())
+  question String
+  answer   String
+
+  @@map("application_answers")
+}
+
+model CoverLetter {
+  id          String   @id @default(uuid())
+  title       String
+  body        String
+  language    String   @default("ar")
+  tone        String   @default("Professional")
+  createdAt   DateTime @default(now())
+
+  @@map("cover_letters")
+}
+
+model Interview {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interviewDate DateTime
+  type          String
+  location      String?
+  notes         String?
+
+  @@map("interviews")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model BrowserDevice {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceName String
+  token      String
+  lastActive DateTime @default(now())
+
+  @@map("browser_devices")
+}
+
+model SiteAdapter {
+  id             String           @id @default(uuid())
+  name           String
+  domain         String
+  version        String
+  status         String
+  versions       AdapterVersion[]
+
+  @@map("site_adapters")
+}
+
+model AdapterVersion {
+  id            String      @id @default(uuid())
+  siteAdapterId String
+  siteAdapter   SiteAdapter @relation(fields: [siteAdapterId], references: [id], onDelete: Cascade)
+  version       String
+  testedAt      DateTime    @default(now())
+
+  @@map("adapter_versions")
+}
+
+model Consent {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consentType String
+  grantedAt   DateTime @default(now())
+
+  @@map("consents")
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planName  String
+  status    String
+  expiresAt DateTime
+
+  @@map("subscriptions")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  details   String
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}
+
+model SupportTicket {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   String
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+
+  @@map("support_tickets")
+}
+
+// -------------------------------------------------------------
+// 15 New Tables for "Apply from Job Ad / Post System"
+// -------------------------------------------------------------
+
+model JobLead {
+  id                  String             @id @default(uuid())
+  userId              String
+  user                User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobSourceId         String?
+  jobSource           JobSource?         @relation(fields: [jobSourceId], references: [id])
+  jobTitle            String
+  companyName         String
+  rawContent          String
+  city                String?
+  country             String?
+  workType            String?
+  salary              String?
+  postDate            DateTime?
+  closingDate         DateTime?
+  referenceNumber     String?
+  originalUrl         String?
+  extractedContacts   ExtractedContact[]
+
+  @@map("job_leads")
+}
+
+model ExtractedContact {
+  id          String    @id @default(uuid())
+  jobLeadId   String
+  jobLead     JobLead   @relation(fields: [jobLeadId], references: [id], onDelete: Cascade)
+  contactType String    // email, phone, whatsapp, url
+  value       String
+  confidence  Float
+  isApproved  Boolean   @default(false)
+
+  @@map("extracted_contacts")
+}
+
+model SendingAccount {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider         String            // GMAIL_OAUTH, OUTLOOK_OAUTH, SMTP
+  emailAddress     String
+  encryptedSecret  String
+  isVerified       Boolean           @default(true)
+  outboundMessages OutboundMessage[]
+
+  @@map("sending_accounts")
+}
+
+model EmailDraft {
+  id        String   @id @default(uuid())
+  subject   String
+  body      String
+  updatedAt DateTime @updatedAt
+
+  @@map("email_drafts")
+}
+
+model OutboundMessage {
+  id                String             @id @default(uuid())
+  userId            String
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  applicationId     String?
+  application       Application?       @relation(fields: [applicationId], references: [id])
+  channel           OutboundChannel    @default(EMAIL)
+  sendingAccountId  String?
+  sendingAccount    SendingAccount?    @relation(fields: [sendingAccountId], references: [id])
+  recipient         String
+  cc                String?
+  bcc               String?
+  subject           String
+  body              String
+  status            OutboundStatus     @default(DRAFT)
+  approvedAt        DateTime?
+  scheduledAt       DateTime?
+  sentAt            DateTime?
+  failedAt          DateTime?
+  failureReason     String?
+  providerMessageId String?
+  attachments       MessageAttachment[]
+  events            MessageEvent[]
+
+  @@map("outbound_messages")
+}
+
+model MessageRecipient {
+  id    String @id @default(uuid())
+  email String
+
+  @@map("message_recipients")
+}
+
+model MessageAttachment {
+  id                String          @id @default(uuid())
+  outboundMessageId String
+  outboundMessage   OutboundMessage @relation(fields: [outboundMessageId], references: [id], onDelete: Cascade)
+  fileName          String
+  fileUrl           String
+  fileSize          Int
+
+  @@map("message_attachments")
+}
+
+model MessageTemplate {
+  id        String   @id @default(uuid())
+  name      String
+  category  String   // General, Tech, Admin, Co-op, WhatsApp
+  subject   String?
+  body      String
+
+  @@map("message_templates")
+}
+
+model MessageEvent {
+  id                String          @id @default(uuid())
+  outboundMessageId String
+  outboundMessage   OutboundMessage @relation(fields: [outboundMessageId], references: [id], onDelete: Cascade)
+  eventType         String          // SENT, DELIVERED, FAILED, REPLY_RECEIVED
+  timestamp         DateTime        @default(now())
+
+  @@map("message_events")
+}
+
+model MessageSchedule {
+  id          String   @id @default(uuid())
+  scheduledAt DateTime
+
+  @@map("message_schedules")
+}
+
+model FollowUpReminder {
+  id           String   @id @default(uuid())
+  reminderDate DateTime
+  isDone       Boolean  @default(false)
+
+  @@map("follow_up_reminders")
+}
+
+model ContactAttempt {
+  id        String   @id @default(uuid())
+  channel   String
+  attemptAt DateTime @default(now())
+
+  @@map("contact_attempts")
+}
+
+model IncomingReply {
+  id        String   @id @default(uuid())
+  fromEmail String
+  subject   String
+  body      String
+  receivedAt DateTime @default(now())
+
+  @@map("incoming_replies")
+}
+
+model PhoneContact {
+  id          String @id @default(uuid())
+  phoneNumber String
+  name        String?
+
+  @@map("phone_contacts")
+}
