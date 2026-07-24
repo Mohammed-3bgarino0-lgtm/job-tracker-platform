@@ -4,9 +4,9 @@
   "private": true,
   "description": "منصة قدّم | Qaddem AI - المساعد الذكي للبحث عن الوظائف وتعبئة الطلبات",
   "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
+    "dev": "pnpm --filter @qaddem/web dev",
+    "build": "prisma generate && pnpm --filter @qaddem/web build",
+    "start": "pnpm --filter @qaddem/web start",
     "db:generate": "prisma generate",
     "db:push": "prisma db push"
   },

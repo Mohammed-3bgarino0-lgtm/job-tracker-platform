@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import '../../../app/globals.css';
+import './globals.css';
 
 export const metadata: Metadata = {
   title: 'قدّم | Qaddem AI - المساعد الذكي للتوظيف',
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className="bg-slate-50 text-slate-900 min-h-screen antialiased">
+      <body className="bg-slate-50 text-slate-900 min-h-screen antialiased font-tajawal">
         {children}
       </body>
     </html>

@@ -38,21 +38,22 @@ enum ContactType {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  email         String          @unique
-  name          String?
-  phone         String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id              String          @id @default(cuid())
+  email           String          @unique
+  name            String?
+  phone           String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
-  profile       UserProfile?
-  careerProfile CareerProfile?
-  resumes       Resume[]
-  applications  Application[]
+  profile         UserProfile?
+  careerProfile   CareerProfile?
+  resumes         Resume[]
+  applications    Application[]
   approvedAnswers ApprovedAnswer[]
-  devices       BrowserDevice[]
-  auditLogs     AuditLog[]
-  emailAccounts EmailAccount[]
+  devices         BrowserDevice[]
+  auditLogs       AuditLog[]
+  emailAccounts   EmailAccount[]
+  consents        ConsentLog[]
 }
 
 model UserProfile {
@@ -81,6 +82,7 @@ model CareerProfile {
   certs        Certification[]
   languages    Language[]
   preferences  JobPreference?
+  matches      JobMatch[]
 }
 
 model Resume {
@@ -107,14 +109,16 @@ model ResumeVersion {
 }
 
 model ResumeExtraction {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   resumeId        String
-  resume          Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  resume          Resume    @relation(fields: [resumeId], references: [id], onDelete: Cascade)
   fieldName       String
   fieldValue      String
   confidenceScore Float
   snippetSource   String
-  isConfirmed     Boolean  @default(false)
+  isConfirmed     Boolean   @default(false)
+  reviewedAt      DateTime?
+  reviewedBy      String?
 }
 
 model Experience {
@@ -206,12 +210,14 @@ model JobContact {
 }
 
 model JobMatch {
-  id           String   @id @default(cuid())
-  jobId        String
-  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  matchScore   Float
-  matchedSkills String[]
-  missingSkills String[]
+  id              String        @id @default(cuid())
+  jobId           String
+  job             Job           @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  careerProfileId String
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  matchScore      Float
+  matchedSkills   String[]
+  missingSkills   String[]
 }
 
 model Application {
@@ -259,7 +265,8 @@ model OutboundEmail {
   recipientEmail String
   subject        String
   bodyHtml       String
-  sentAt         DateTime     @default(now())
+  sentAt         DateTime?
+  createdAt      DateTime     @default(now())
 }
 
 model BrowserDevice {
@@ -268,6 +275,15 @@ model BrowserDevice {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   deviceName   String
   lastSyncAt   DateTime @default(now())
+}
+
+model ConsentLog {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consentType  String
+  grantedAt    DateTime @default(now())
+  ipAddress    String?
 }
 
 model AuditLog {
