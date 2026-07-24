@@ -1,6 +1,7 @@
-// Sidepanel Script for Wdhifaa Scraper & EML Generator
+// Sidepanel Script for Wdhifaa Scraper, Gender Classification & EML Generator
 
 let activeJobs = [];
+let currentGenderFilter = 'all';
 
 function scrapeWdhifaaPosts() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -14,11 +15,10 @@ function scrapeWdhifaaPosts() {
         return [];
       }
     }, (results) => {
-      if (results && results[0] && results[0].result) {
+      if (results && results[0] && results[0].result && results[0].result.length > 0) {
         activeJobs = results[0].result;
-        renderJobsList(activeJobs);
       } else {
-        // Fallback sample Wdhifaa post
+        // Sample fallback Wdhifaa posts with gender distinctions
         activeJobs = [
           {
             title: 'منسقة مواعيد لدكتورة جلدية وتجميل',
@@ -26,43 +26,85 @@ function scrapeWdhifaaPosts() {
             city: 'الرياض',
             email: 'hr@clinic-beauty.com',
             phone: '0537510028',
-            formUrl: '',
             subjectInstruction: 'منسقة مواعيد - الرياض',
             channel: 'whatsapp',
+            targetGender: 'female',
+            targetGenderLabel: '👩 للنساء فقط',
+            badgeClass: 'badge-female',
+            date: '2026-07-24'
+          },
+          {
+            title: 'مشرف خدمات إدارية وتطوير عمليات',
+            company: 'شركة سابك (SABIC)',
+            city: 'الرياض',
+            email: 'hr@sabic-ksa.com',
+            phone: '0539491361',
+            subjectInstruction: 'مشرف إداري - الرياض',
+            channel: 'email',
+            targetGender: 'both',
+            targetGenderLabel: '👫 للرجال والنساء',
+            badgeClass: 'badge-both',
+            date: '2026-07-24'
+          },
+          {
+            title: 'سائق حافلة ونقل موقع',
+            company: 'شركة اللوجستيات السعودية',
+            city: 'الرياض',
+            email: 'hr@saudi-logistics.com',
+            phone: '0531234567',
+            subjectInstruction: 'سائق موقع - الرياض',
+            channel: 'email',
+            targetGender: 'male',
+            targetGenderLabel: '👨 للرجال فقط',
+            badgeClass: 'badge-male',
             date: '2026-07-24'
           }
         ];
-        renderJobsList(activeJobs);
       }
+      renderJobsList();
     });
   });
 }
 
-function renderJobsList(jobs) {
+function filterByGender(gender) {
+  currentGenderFilter = gender;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('f-' + gender)?.classList.add('active');
+  renderJobsList();
+}
+
+function renderJobsList() {
   const container = document.getElementById('wdhifaa-scraped-list');
   container.innerHTML = '';
 
-  if (jobs.length === 0) {
-    container.innerHTML = '<div style="font-size:11px; color:#64748b; text-center">لم يتم اكتشاف منشورات ظاهرة بعد. افحص صفحة x.com/Wdhifaa ومرر للأسفل.</div>';
+  let filtered = activeJobs;
+  if (currentGenderFilter !== 'all') {
+    filtered = activeJobs.filter(j => j.targetGender === currentGenderFilter);
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="font-size:11px; color:#64748b; text-align:center; padding:10px;">لا توجد وظائف مطابقة للفلتر المباشر.</div>';
     return;
   }
 
-  jobs.forEach((j, idx) => {
+  filtered.forEach((j) => {
     let tagClass = 'tag-email';
     let tagLabel = 'بريد إلكتروني';
-    if (j.channel === 'whatsapp') { tagClass = 'tag-whatsapp'; tagLabel = 'واتساب مباشر'; }
-    else if (j.channel === 'form') { tagClass = 'tag-form'; tagLabel = 'نموذج تقديم'; }
-    else if (j.channel === 'ocr_needed') { tagClass = 'tag-ocr'; tagLabel = 'صورة (تحتاج OCR)'; }
+    if (j.channel === 'whatsapp') { tagClass = 'tag-whatsapp'; tagLabel = 'واتساب'; }
+    else if (j.channel === 'form') { tagClass = 'tag-form'; tagLabel = 'نموذج'; }
 
     const card = document.createElement('div');
     card.className = 'job-card';
     card.innerHTML = `
       <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-        <strong style="color:#0f172a; font-size:13px;">${j.title}</strong>
+        <strong style="color:#0f172a; font-size:12px;">${j.title}</strong>
         <span class="channel-tag ${tagClass}">${tagLabel}</span>
       </div>
-      <div style="color:#065f46; font-weight:bold; font-size:11px; margin-bottom:4px;">${j.company} - ${j.city}</div>
-      <div style="font-size:10px; color:#64748b; margin-bottom:8px;">العنوان المطلوب: "${j.subjectInstruction}"</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+        <span style="color:#065f46; font-weight:bold; font-size:11px;">${j.company} - ${j.city}</span>
+        <span class="channel-tag ${j.badgeClass}">${j.targetGenderLabel}</span>
+      </div>
+      <div style="font-size:10px; color:#64748b; margin-bottom:6px;">العنوان: "${j.subjectInstruction}"</div>
       <div style="display:flex; gap:6px;">
         ${j.email ? `<button onclick="openGmail('${j.email}', '${encodeURIComponent(j.subjectInstruction)}')" style="padding:4px 8px; font-size:10px; background:#065f46; color:white; border:none; border-radius:4px; cursor:pointer;">تجهيز البريد</button>` : ''}
         ${j.phone ? `<button onclick="openWA('${j.phone}')" style="padding:4px 8px; font-size:10px; background:#16a34a; color:white; border:none; border-radius:4px; cursor:pointer;">واتساب</button>` : ''}

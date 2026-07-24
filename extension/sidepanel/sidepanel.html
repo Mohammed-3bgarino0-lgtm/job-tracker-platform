@@ -16,7 +16,7 @@
             color: white;
             padding: 14px;
             border-radius: 12px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
         .header h3 { margin: 0; font-size: 15px; font-weight: 800; }
         .btn {
@@ -52,19 +52,34 @@
         .tag-whatsapp { background: #dcfce7; color: #15803d; }
         .tag-form { background: #dbeafe; color: #1e40af; }
         .tag-ocr { background: #fef3c7; color: #b45309; }
+
+        .badge-female { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
+        .badge-male { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .badge-both { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+
+        .filter-btn { padding: 4px 8px; font-size: 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-weight: bold; }
+        .filter-btn.active { background: #065f46; color: white; border-color: #065f46; }
     </style>
 </head>
 <body>
     <div class="header">
         <h3>📌 قدّم | محول @Wdhifaa على X</h3>
-        <span style="font-size: 10px;">سحب وتصنيف المنشورات وتنزيل مسودات EML</span>
+        <span style="font-size: 10px;">سحب وتصنيف المنشورات وتحديد الجنس الموجه</span>
     </div>
 
     <button class="btn" onclick="scrapeWdhifaaPosts()"><i class="fa-solid fa-cloud-arrow-down"></i> سحب وظائف @Wdhifaa الظاهرة</button>
     <button class="btn btn-outline" onclick="downloadEMLDraft()"><i class="fa-solid fa-file-export"></i> تنزيل مسودة EML مع السيرة المرفقة</button>
 
-    <div style="margin-top: 14px; border-top: 1px solid #e2e8f0; padding-top: 10px;">
-        <h4 style="font-size: 13px; font-weight: 800; margin-bottom: 8px;">الفرص المسحوبة والمصنفة:</h4>
+    <!-- Gender Filter Buttons -->
+    <div style="display:flex; gap:4px; margin-top:10px; margin-bottom:10px; flex-wrap:wrap;">
+        <button id="f-all" class="filter-btn active" onclick="filterByGender('all')">الكل</button>
+        <button id="f-female" class="filter-btn" onclick="filterByGender('female')">👩 للنساء فقط</button>
+        <button id="f-male" class="filter-btn" onclick="filterByGender('male')">👨 للرجال فقط</button>
+        <button id="f-both" class="filter-btn" onclick="filterByGender('both')">👫 للجميع</button>
+    </div>
+
+    <div style="border-top: 1px solid #e2e8f0; padding-top: 10px;">
+        <h4 style="font-size: 12px; font-weight: 800; margin-bottom: 8px;">الفرص المسحوبة والمصنفة:</h4>
         <div id="wdhifaa-scraped-list">
             <!-- Dynamic jobs list injected here -->
         </div>
