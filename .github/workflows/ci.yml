@@ -68,7 +68,28 @@ jobs:
         run: pnpm db:validate
 
       - name: Generate Prisma client
-        run: pnpm db:generate
+        id: prisma_generate
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm db:generate > prisma-generate.log 2>&1
+          status=$?
+          cat prisma-generate.log
+          exit $status
+
+      - name: Upload Prisma generation log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prisma-generate-log
+          path: prisma-generate.log
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Stop after Prisma generation failure
+        if: steps.prisma_generate.outcome == 'failure'
+        run: exit 1
 
       - name: Typecheck
         run: pnpm typecheck
