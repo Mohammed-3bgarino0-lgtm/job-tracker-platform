@@ -85,7 +85,14 @@ async function injectAndRunScanner(tabId, requestId, rounds) {
   });
 }
 
-async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds }) {
+async function scanTab({
+  requestId,
+  targetUrl,
+  targetTabId,
+  sourceTabId,
+  rounds,
+  skipPermissionCheck = false,
+}) {
   const state = {
     requestId,
     targetTabId,
@@ -95,7 +102,12 @@ async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds 
   activeScans.set(requestId, state);
 
   try {
-    await forwardProgress(sourceTabId, requestId, 'loading', 'جارٍ انتظار اكتمال تحميل الصفحة.');
+    await forwardProgress(
+      sourceTabId,
+      requestId,
+      'loading',
+      'جارٍ انتظار اكتمال تحميل الصفحة.',
+    );
     await waitForTabReady(targetTabId);
     if (state.cancelled) {
       return responseMessage(requestId, 'cancelled');
@@ -105,18 +117,26 @@ async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds 
     const loadedUrl = safeScanUrl(loadedTab.url ?? targetUrl.toString());
     if (!loadedUrl) throw new Error('UNSAFE_REDIRECT');
 
-    const loadedPermission = permissionPatternForUrl(loadedUrl);
-    const permitted = await chrome.permissions.contains({
-      origins: [loadedPermission],
-    });
-    if (!permitted) {
-      throw new Error('REDIRECT_PERMISSION_REQUIRED');
+    if (!skipPermissionCheck) {
+      const loadedPermission = permissionPatternForUrl(loadedUrl);
+      const permitted = await chrome.permissions.contains({
+        origins: [loadedPermission],
+      });
+      if (!permitted) {
+        throw new Error('REDIRECT_PERMISSION_REQUIRED');
+      }
     }
 
-    await forwardProgress(sourceTabId, requestId, 'scanning', 'بدأ فحص البطاقات الظاهرة والتمرير المحدود.', {
-      currentRound: 0,
-      totalRounds: rounds,
-    });
+    await forwardProgress(
+      sourceTabId,
+      requestId,
+      'scanning',
+      'بدأ فحص البطاقات الظاهرة والتمرير المحدود.',
+      {
+        currentRound: 0,
+        totalRounds: rounds,
+      },
+    );
 
     const rawResult = await injectAndRunScanner(
       targetTabId,
@@ -129,7 +149,12 @@ async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds 
     }
     if (rawResult?.error) throw new Error('SCANNER_FAILED');
 
-    await forwardProgress(sourceTabId, requestId, 'deduplicating', 'جارٍ إزالة النتائج المكررة.');
+    await forwardProgress(
+      sourceTabId,
+      requestId,
+      'deduplicating',
+      'جارٍ إزالة النتائج المكررة.',
+    );
     const jobs = dedupeJobs(rawResult?.jobs ?? []).slice(0, 100);
     const result = {
       scannedUrl: loadedUrl.toString(),
@@ -146,7 +171,12 @@ async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds 
         completedAt: new Date().toISOString(),
       },
     });
-    await forwardProgress(sourceTabId, requestId, 'complete', `اكتمل الفحص وعُثر على ${jobs.length} نتيجة.`);
+    await forwardProgress(
+      sourceTabId,
+      requestId,
+      'complete',
+      `اكتمل الفحص وعُثر على ${jobs.length} نتيجة.`,
+    );
 
     return responseMessage(requestId, 'ok', { data: result });
   } catch (error) {
@@ -200,7 +230,12 @@ async function openAndScan(request, sourceTabId) {
     });
   }
 
-  await forwardProgress(sourceTabId, request.requestId, 'opening', 'جارٍ فتح رابط الوظيفة في تبويب جديد.');
+  await forwardProgress(
+    sourceTabId,
+    request.requestId,
+    'opening',
+    'جارٍ فتح رابط الوظيفة في تبويب جديد.',
+  );
   const tab = await chrome.tabs.create({
     url: targetUrl.toString(),
     active: true,
@@ -229,7 +264,12 @@ async function cancelScan(request) {
       internalType: 'QADDEM_SCANNER_CANCEL',
       requestId: targetRequestId,
     });
-    await forwardProgress(scan.sourceTabId, targetRequestId, 'cancelled', 'تم إلغاء الفحص.');
+    await forwardProgress(
+      scan.sourceTabId,
+      targetRequestId,
+      'cancelled',
+      'تم إلغاء الفحص.',
+    );
   }
   return responseMessage(request.requestId, 'cancelled');
 }
@@ -251,7 +291,10 @@ async function handleBridgeRequest(request, sender) {
 }
 
 async function popupState() {
-  const stored = await chrome.storage.local.get([PENDING_SCAN_KEY, LAST_SCAN_KEY]);
+  const stored = await chrome.storage.local.get([
+    PENDING_SCAN_KEY,
+    LAST_SCAN_KEY,
+  ]);
   return {
     extensionVersion: EXTENSION_VERSION,
     pending: stored[PENDING_SCAN_KEY] ?? null,
@@ -281,7 +324,9 @@ async function scanCurrentTab() {
     return { ok: false, error: 'لا توجد صفحة نشطة قابلة للفحص.' };
   }
   const targetUrl = safeScanUrl(tab.url);
-  if (!targetUrl) return { ok: false, error: 'هذه الصفحة غير قابلة للفحص.' };
+  if (!targetUrl) {
+    return { ok: false, error: 'هذه الصفحة غير قابلة للفحص.' };
+  }
 
   const requestId = `popup_${crypto.randomUUID().replace(/-/g, '')}`;
   const response = await scanTab({
@@ -290,29 +335,38 @@ async function scanCurrentTab() {
     targetTabId: tab.id,
     sourceTabId: undefined,
     rounds: 7,
+    skipPermissionCheck: true,
   });
   return { ok: response.status === 'ok', response };
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (isBridgeRequest(message)) {
-    handleBridgeRequest(message, sender).then(sendResponse).catch(() =>
-      sendResponse(
-        responseMessage(message.requestId, 'error', {
-          error: 'تعذر تنفيذ طلب الإضافة.',
-        }),
-      ),
-    );
+    handleBridgeRequest(message, sender)
+      .then(sendResponse)
+      .catch(() =>
+        sendResponse(
+          responseMessage(message.requestId, 'error', {
+            error: 'تعذر تنفيذ طلب الإضافة.',
+          }),
+        ),
+      );
     return true;
   }
 
   if (message?.internalType === 'QADDEM_SCANNER_PROGRESS') {
     const scan = activeScans.get(String(message.requestId));
     if (scan) {
-      forwardProgress(scan.sourceTabId, scan.requestId, 'scanning', 'جارٍ تحميل وفحص المزيد من البطاقات.', {
-        currentRound: Number(message.currentRound),
-        totalRounds: Number(message.totalRounds),
-      });
+      void forwardProgress(
+        scan.sourceTabId,
+        scan.requestId,
+        'scanning',
+        'جارٍ تحميل وفحص المزيد من البطاقات.',
+        {
+          currentRound: Number(message.currentRound),
+          totalRounds: Number(message.totalRounds),
+        },
+      );
     }
     sendResponse({ ok: true });
     return false;
