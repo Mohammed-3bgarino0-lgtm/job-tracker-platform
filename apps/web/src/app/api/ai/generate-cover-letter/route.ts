@@ -1,22 +1,47 @@
 import { NextResponse } from 'next/server';
-import { generateCoverLetterWithGemini, GeminiCoverLetterRequest } from '../../../../lib/ai/gemini';
+import { z } from 'zod';
+import { generateCoverLetterWithGemini } from '@/lib/ai/gemini';
 
-export async function POST(req: Request) {
+export const runtime = 'nodejs';
+
+const CoverLetterRequestSchema = z.object({
+  candidateName: z.string().trim().min(2).max(120),
+  candidateEmail: z.string().trim().email().max(254).optional(),
+  candidatePhone: z.string().trim().min(7).max(30).optional(),
+  candidateTitle: z.string().trim().max(160).optional(),
+  jobTitle: z.string().trim().min(2).max(180),
+  companyName: z.string().trim().min(2).max(180),
+  jobDescription: z.string().trim().max(20_000).optional(),
+});
+
+export async function POST(request: Request) {
   try {
-    const body = await req.json() as GeminiCoverLetterRequest;
+    const body: unknown = await request.json();
+    const parsedRequest = CoverLetterRequestSchema.safeParse(body);
 
-    if (!body.candidateName || !body.jobTitle || !body.companyName) {
-      return NextResponse.json({ error: 'بيانات المتقدم والوظيفة والشركة مطلوبة لتوليد الخطاب.' }, { status: 400 });
+    if (!parsedRequest.success) {
+      return NextResponse.json(
+        {
+          error:
+            'تحقق من اسم المتقدم والمسمى الوظيفي واسم الشركة وبيانات التواصل.',
+        },
+        { status: 400 },
+      );
     }
 
-    const coverLetter = await generateCoverLetterWithGemini(body);
+    const coverLetter = await generateCoverLetterWithGemini(
+      parsedRequest.data,
+    );
 
-    return NextResponse.json({
-      success: true,
-      coverLetter
-    });
-  } catch (error: any) {
-    console.error('API Generate Cover Letter Error:', error);
-    return NextResponse.json({ error: error.message || 'حدث خطأ أثناء إنشاء الخطاب.' }, { status: 500 });
+    return NextResponse.json({ success: true, coverLetter });
+  } catch (error) {
+    console.error(
+      'Cover letter API failed.',
+      error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+    );
+    return NextResponse.json(
+      { error: 'حدث خطأ أثناء إنشاء خطاب التقديم.' },
+      { status: 500 },
+    );
   }
 }

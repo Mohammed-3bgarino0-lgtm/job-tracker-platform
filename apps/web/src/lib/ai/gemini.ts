@@ -1,181 +1,273 @@
-// Gemini AI Integration Module for Qaddem AI Platform
+import {
+  TargetGender,
+  classifyJobGender,
+} from '@qaddem/shared';
+import { z } from 'zod';
+
+export type JobGenderTarget =
+  | 'FEMALE'
+  | 'MALE'
+  | 'BOTH'
+  | 'UNSPECIFIED';
 
 export interface GeminiJobAnalysis {
-  title: string;
-  company: string;
-  city: string;
+  title: string | null;
+  company: string | null;
+  city: string | null;
   emails: string[];
   phones: string[];
   forms: string[];
   links: string[];
-  genderTarget: 'FEMALE' | 'MALE' | 'BOTH';
-  genderEvidence?: string;
-  summaryAr: string;
+  genderTarget: JobGenderTarget;
+  genderEvidence: string[];
+  genderConfidence: number;
+  summaryAr: string | null;
+  source: 'gemini' | 'deterministic';
+  warnings: string[];
 }
 
 export interface GeminiCoverLetterRequest {
   candidateName: string;
-  candidateEmail: string;
-  candidatePhone: string;
-  candidateTitle: string;
+  candidateEmail?: string;
+  candidatePhone?: string;
+  candidateTitle?: string;
   jobTitle: string;
   companyName: string;
   jobDescription?: string;
 }
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY?.trim() ?? '';
+const GEMINI_API_URL =
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
-/**
- * Direct call to Google Gemini API REST interface
- */
-async function callGeminiApi(prompt: string, jsonMode: boolean = false): Promise<string> {
+const GeminiJobFieldsSchema = z.object({
+  title: z.string(),
+  company: z.string(),
+  city: z.string(),
+  summaryAr: z.string(),
+});
+
+type GeminiJobFields = z.infer<typeof GeminiJobFieldsSchema>;
+
+interface GeminiGenerateContentResponse {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{ text?: string }>;
+    };
+  }>;
+}
+
+function normalizeNullable(value: string | undefined): string | null {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
+function uniqueMatches(text: string, pattern: RegExp): string[] {
+  return Array.from(new Set(text.match(pattern) ?? []));
+}
+
+function extractContacts(rawText: string) {
+  const emails = uniqueMatches(
+    rawText,
+    /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g,
+  );
+  const phones = uniqueMatches(
+    rawText,
+    /(?:\+?9665|05|\+?967|\+?971|\+?965|\+?968|\+?973)[0-9\s-]{7,12}/g,
+  ).map((phone) => phone.trim());
+  const forms = uniqueMatches(
+    rawText,
+    /https?:\/\/(?:docs\.google\.com\/forms|forms\.gle|(?:www\.)?typeform\.com)\/[^\s]+/gi,
+  );
+  const allLinks = uniqueMatches(rawText, /https?:\/\/[^\s]+/gi).map(
+    (link) => link.replace(/[),.;!?،؛]+$/u, ''),
+  );
+  const links = allLinks.filter((link) => !forms.includes(link));
+
+  return { emails, phones, forms, links };
+}
+
+function mapGenderTarget(target: TargetGender): JobGenderTarget {
+  switch (target) {
+    case TargetGender.FEMALE:
+      return 'FEMALE';
+    case TargetGender.MALE:
+      return 'MALE';
+    case TargetGender.BOTH:
+      return 'BOTH';
+    default:
+      return 'UNSPECIFIED';
+  }
+}
+
+function deterministicJobAnalysis(rawText: string): GeminiJobAnalysis {
+  const contacts = extractContacts(rawText);
+  const gender = classifyJobGender('', rawText);
+
+  return {
+    title: null,
+    company: null,
+    city: null,
+    ...contacts,
+    genderTarget: mapGenderTarget(gender.targetGender),
+    genderEvidence: gender.evidence,
+    genderConfidence: gender.confidence,
+    summaryAr: null,
+    source: 'deterministic',
+    warnings: GEMINI_API_KEY
+      ? []
+      : ['لم يُضبط GEMINI_API_KEY؛ أُعيدت البيانات المؤكدة فقط دون تخمين.'],
+  };
+}
+
+async function callGeminiApi(
+  prompt: string,
+  jsonMode = false,
+): Promise<string> {
   if (!GEMINI_API_KEY) {
-    throw new Error('مفتاح GEMINI_API_KEY غير معرف في بيئة النظام (Environment Variables).');
+    throw new Error('GEMINI_API_KEY_NOT_CONFIGURED');
   }
 
-  const payload: any = {
-    contents: [
-      {
-        parts: [
-          { text: prompt }
-        ]
-      }
-    ]
+  const payload: Record<string, unknown> = {
+    contents: [{ parts: [{ text: prompt }] }],
   };
 
   if (jsonMode) {
     payload.generationConfig = {
-      responseMimeType: 'application/json'
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          company: { type: 'string' },
+          city: { type: 'string' },
+          summaryAr: { type: 'string' },
+        },
+        required: ['title', 'company', 'city', 'summaryAr'],
+      },
     };
   }
 
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+  const response = await fetch(GEMINI_API_URL, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'x-goog-api-key': GEMINI_API_KEY,
     },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(30_000),
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`خطأ في خادم Gemini API (${response.status}): ${errorText}`);
+    throw new Error(`GEMINI_API_${response.status}`);
   }
 
-  const data = await response.json();
-  const candidate = data.candidates?.[0];
-  const textOutput = candidate?.content?.parts?.[0]?.text || '';
-  return textOutput;
+  const data = (await response.json()) as GeminiGenerateContentResponse;
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
+  if (!text) {
+    throw new Error('GEMINI_EMPTY_RESPONSE');
+  }
+
+  return text;
 }
 
-/**
- * Analyze Job Advertisement using Gemini AI
- */
-export async function analyzeJobPostingWithGemini(rawText: string): Promise<GeminiJobAnalysis> {
-  // Extract regex hard evidence first to enforce Zero Dummy Data rule
-  const emails = Array.from(new Set(rawText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || []));
-  const phones = Array.from(new Set(rawText.match(/(?:05|\+9665|\+967|\+971|\+965|\+968|\+973)[0-9]{8,10}/g) || []));
-  const forms = Array.from(new Set(rawText.match(/https?:\/\/(?:docs\.google\.com\/forms|forms\.gle|typeform\.com)[^\s]+/gi) || []));
-  const links = Array.from(new Set(rawText.match(/https?:\/\/[^\s]+/gi) || [])).filter(l => !forms.includes(l));
+export async function analyzeJobPostingWithGemini(
+  rawText: string,
+): Promise<GeminiJobAnalysis> {
+  const deterministic = deterministicJobAnalysis(rawText);
 
   if (!GEMINI_API_KEY) {
-    // Fallback to strict deterministic parsing if key not present
-    let genderTarget: 'FEMALE' | 'MALE' | 'BOTH' = 'BOTH';
-    if (rawText.includes('نساء') || rawText.includes('إناث') || rawText.includes('منسقة') || rawText.includes('أخصائية')) {
-      genderTarget = 'FEMALE';
-    } else if (rawText.includes('رجال') || rawText.includes('ذكور') || rawText.includes('سائق')) {
-      genderTarget = 'MALE';
-    }
-
-    return {
-      title: 'وظيفة معلنة',
-      company: 'جهة معلنة',
-      city: rawText.includes('الرياض') ? 'الرياض' : (rawText.includes('جدة') ? 'جدة' : 'المملكة العربية السعودية'),
-      emails,
-      phones,
-      forms,
-      links,
-      genderTarget,
-      summaryAr: rawText.slice(0, 300)
-    };
+    return deterministic;
   }
 
-  const prompt = `أنت مساعد خبير في تحليل إعلانات الوظائف السعودية والخليجية منصة "قدّم AI".
-قم بتحليل النص التالي واستخراج ما يلي في صيغة JSON حصرية فقط بدون أي نصوص خارج الـ JSON:
+  const prompt = `حلل إعلان الوظيفة التالي واستخرج المعلومات الصريحة فقط.
 
-المطلوب استخراجه:
-- title: المسمى الوظيفي المستهدف الصريح
-- company: اسم الشركة أو الجهة المعلنة
-- city: المدينة السعودية المحددة (مثال: الرياض، جدة، الدمام)
-- genderTarget: حدد إما "FEMALE" إذا كان مخصصاً للنساء فقط، "MALE" إذا كان مخصصاً للرجال فقط، أو "BOTH" إذا كان متاحاً لكلا الجنسين.
+قواعد إلزامية:
+- لا تخترع أي قيمة.
+- عند غياب المسمى أو الشركة أو المدينة أو الملخص، أعد سلسلة فارغة.
+- لا تستنتج الجنس من المسمى المهني أو الصور النمطية؛ تصنيف الجنس سيعالج خارج النموذج.
+- الملخص يجب أن يلخص النص فقط دون إضافة مهارات أو شروط غير موجودة.
 
-النص المراد تحليله:
+الإعلان:
 """
 ${rawText}
 """`;
 
   try {
-    const jsonString = await callGeminiApi(prompt, true);
-    const parsed = JSON.parse(jsonString);
+    const rawJson = await callGeminiApi(prompt, true);
+    const parsed: GeminiJobFields = GeminiJobFieldsSchema.parse(
+      JSON.parse(rawJson),
+    );
 
     return {
-      title: parsed.title || 'وظيفة معلنة',
-      company: parsed.company || 'جهة معلنة',
-      city: parsed.city || 'المملكة العربية السعودية',
-      emails, // Enforce strict extracted regex emails
-      phones, // Enforce strict extracted regex phones
-      forms,
-      links,
-      genderTarget: parsed.genderTarget === 'FEMALE' ? 'FEMALE' : (parsed.genderTarget === 'MALE' ? 'MALE' : 'BOTH'),
-      genderEvidence: parsed.genderEvidence,
-      summaryAr: rawText.slice(0, 300)
+      ...deterministic,
+      title: normalizeNullable(parsed.title),
+      company: normalizeNullable(parsed.company),
+      city: normalizeNullable(parsed.city),
+      summaryAr: normalizeNullable(parsed.summaryAr),
+      source: 'gemini',
+      warnings: [],
     };
-  } catch (err) {
-    console.error('Gemini AI analysis error:', err);
+  } catch (error) {
+    console.error(
+      'Gemini job analysis failed; deterministic result returned.',
+      error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+    );
     return {
-      title: 'وظيفة معلنة',
-      company: 'جهة معلنة',
-      city: 'المملكة العربية السعودية',
-      emails,
-      phones,
-      forms,
-      links,
-      genderTarget: 'BOTH',
-      summaryAr: rawText.slice(0, 300)
+      ...deterministic,
+      warnings: [
+        'تعذر تحليل الإعلان بالذكاء الاصطناعي؛ أُعيدت البيانات المؤكدة فقط دون قيم بديلة.',
+      ],
     };
   }
 }
 
-/**
- * Generate Customized Arabic Cover Letter / Application Email using Gemini AI
- */
-export async function generateCoverLetterWithGemini(req: GeminiCoverLetterRequest): Promise<string> {
+function buildSafeFallbackLetter(
+  request: GeminiCoverLetterRequest,
+): string {
+  const contact = [request.candidatePhone, request.candidateEmail]
+    .map((value) => value?.trim())
+    .filter(Boolean)
+    .join(' | ');
+
+  return `السلام عليكم ورحمة الله وبركاته،
+
+السادة فريق التوظيف في ${request.companyName} المحترمين،
+
+أتقدم للتقديم على وظيفة ${request.jobTitle}. أرفق سيرتي الذاتية للاطلاع على خبراتي ومؤهلاتي، ويسعدني مناقشة مدى ملاءمتي للفرصة.
+
+وتفضلوا بقبول خالص التقدير،
+${request.candidateName}${contact ? `\n${contact}` : ''}`;
+}
+
+export async function generateCoverLetterWithGemini(
+  request: GeminiCoverLetterRequest,
+): Promise<string> {
   if (!GEMINI_API_KEY) {
-    return `السلام عليكم ورحمة الله وبركاته،،\n\nالسادة / فريق الموارد البشرية في ${req.companyName} المحترمين،\n\nأتقدم إليكم بطلب التقديم على شاغر (${req.jobTitle}). أمتلك الخبرات والمهارات اللازمة للقيام بمهام الوظيفة بفاعلية.\n\nتجدون مرفقاً السيرة الذاتية لسيادتكم.\n\nوتفضلوا بقبول خالص الشكر والتقدير،،\n${req.candidateName}\n${req.candidatePhone} | ${req.candidateEmail}`;
+    return buildSafeFallbackLetter(request);
   }
 
-  const prompt = `أنت كاتب محترف لرسائل التقديم على الوظائف باللغة العربية مخصص لمنصة "قدّم AI".
-اكتب رسالة بريد إلكتروني رسمية واحترافية وجذابة ومختصرة ومقنعة للتقديم على وظيفة بالمعلومات التالية:
+  const prompt = `اكتب رسالة تقديم عربية رسمية ومختصرة اعتمادًا على المعلومات التالية فقط.
+لا تضف خبرة أو مهارة أو إنجازًا غير مذكور، ولا تدّعِ ملاءمة غير مثبتة.
 
-- اسم المتقدم: ${req.candidateName}
-- مسمى المتقدم الحالي: ${req.candidateTitle}
-- البريد الإلكتروني للمتقدم: ${req.candidateEmail}
-- الجوال: ${req.candidatePhone}
-- الوظيفة المستهدفة: ${req.jobTitle}
-- اسم الجهة المعلنة: ${req.companyName}
-${req.jobDescription ? `- تفاصيل/متطلبات الوظيفة: ${req.jobDescription}` : ''}
+اسم المتقدم: ${request.candidateName}
+المسمى الحالي: ${request.candidateTitle?.trim() || 'غير محدد'}
+الوظيفة المستهدفة: ${request.jobTitle}
+الشركة: ${request.companyName}
+وصف الوظيفة: ${request.jobDescription?.trim() || 'غير متوفر'}
+البريد: ${request.candidateEmail?.trim() || 'غير متوفر'}
+الجوال: ${request.candidatePhone?.trim() || 'غير متوفر'}
 
-قواعد التنسيق:
-- الرسالة باللغة العربية الفصحى الأنيقة.
-- تتضمن تحية رسمية، مقدمة موجزة، مؤهلات سريعة، وخاتمة مهنية.
-- لا تضع أقواس وهمية أو متغيرات غير ممتلئة.`;
+أعد نص الرسالة فقط دون عنوان أو شرح إضافي.`;
 
   try {
-    const letterText = await callGeminiApi(prompt, false);
-    return letterText;
-  } catch (err) {
-    console.error('Gemini Cover Letter Generation Error:', err);
-    return `السلام عليكم ورحمة الله وبركاته،،\n\nالسادة / فريق الموارد البشرية في ${req.companyName} المحترمين،\n\nأتقدم إليكم بطلب التقديم على شاغر (${req.jobTitle}).\n\nمع خالص الشكر،،\n${req.candidateName}`;
+    return await callGeminiApi(prompt);
+  } catch (error) {
+    console.error(
+      'Gemini cover letter generation failed; safe template returned.',
+      error instanceof Error ? error.message : 'UNKNOWN_ERROR',
+    );
+    return buildSafeFallbackLetter(request);
   }
 }
