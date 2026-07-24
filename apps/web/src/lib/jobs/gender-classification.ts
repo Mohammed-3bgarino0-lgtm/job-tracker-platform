@@ -11,6 +11,21 @@ export interface PersistedGenderClassification {
   genderClassifiedAt: Date | null;
 }
 
+function toPersistedGenderTarget(
+  targetGender: TargetGender,
+): PersistedGenderClassification['genderTarget'] {
+  switch (targetGender) {
+    case TargetGender.MALE:
+      return 'MALE';
+    case TargetGender.FEMALE:
+      return 'FEMALE';
+    case TargetGender.BOTH:
+      return 'BOTH';
+    case TargetGender.UNSPECIFIED:
+      return null;
+  }
+}
+
 export function buildGenderClassification(
   title: string,
   description: string | null,
@@ -19,15 +34,16 @@ export function buildGenderClassification(
   persistence: PersistedGenderClassification;
 } {
   const result = classifyJobGender(title, description ?? '');
-  const isUnspecified = result.targetGender === TargetGender.UNSPECIFIED;
+  const genderTarget = toPersistedGenderTarget(result.targetGender);
+  const hasExplicitTarget = genderTarget !== null && result.isExplicit;
 
   return {
     result,
     persistence: {
-      genderTarget: isUnspecified ? null : result.targetGender,
-      genderConfidence: isUnspecified ? null : result.confidence,
-      genderEvidence: result.evidence,
-      genderClassifiedAt: result.isExplicit ? new Date() : null,
+      genderTarget,
+      genderConfidence: hasExplicitTarget ? result.confidence : null,
+      genderEvidence: hasExplicitTarget ? result.evidence : [],
+      genderClassifiedAt: hasExplicitTarget ? new Date() : null,
     },
   };
 }
