@@ -100,6 +100,26 @@ jobs:
           cat build.log
           exit $status
 
+      - name: Build Chrome extension
+        id: extension
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm extension:build > extension-build.log 2>&1
+          status=$?
+          cat extension-build.log
+          exit $status
+
+      - name: Upload Chrome extension artifact
+        if: steps.extension.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: qaddem-chrome-extension-v1.4.0
+          path: apps/extension/dist
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload validation logs
         if: always()
         uses: actions/upload-artifact@v4
@@ -109,6 +129,7 @@ jobs:
             typecheck.log
             tests.log
             build.log
+            extension-build.log
           if-no-files-found: ignore
           retention-days: 3
 
@@ -126,7 +147,11 @@ jobs:
             failed=1
           fi
           if [[ "${{ steps.build.outcome }}" == "failure" ]]; then
-            echo "Build failed"
+            echo "Web build failed"
+            failed=1
+          fi
+          if [[ "${{ steps.extension.outcome }}" == "failure" ]]; then
+            echo "Extension build failed"
             failed=1
           fi
           exit "$failed"
