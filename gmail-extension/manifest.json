@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "مساعد التقديم والتوظيف الآلي في Gmail | محمد السكران",
+  "version": "1.0",
+  "description": "إضافة مخصصة لجيميل لتوليد الخطابات التعريفية التلقائية وإرسال طلبات التوظيف ومتابعة التقديمات بنقرة زر واحدة لمحمد السكران.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://mail.google.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "مساعد التوظيف في Gmail"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "css": ["styles.css"],
+      "js": ["content.js"]
+    }
+  ]
+}
