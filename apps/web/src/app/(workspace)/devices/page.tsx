@@ -1,20 +1,24 @@
+import { ExtensionBridgePanel } from '@/components/devices/ExtensionBridgePanel';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 
 const channels = [
   {
     title: 'إضافة Chrome للكمبيوتر',
-    description: 'قراءة صفحات الوظائف المفتوحة، اكتشاف الحقول، وإرسال النتائج إلى حساب المستخدم بعد الربط الآمن.',
-    status: 'قيد التطوير',
+    description:
+      'قراءة صفحات الوظائف المفتوحة، واستخراج البطاقات الظاهرة، وإرسال النتائج إلى الموقع بعد أمر صريح من المستخدم.',
+    status: 'نسخة أولية v1.4',
   },
   {
     title: 'تطبيق Android',
-    description: 'البحث والمشاركة والمتابعة، ثم خدمة تعبئة اختيارية يفعّلها المستخدم بنفسه.',
+    description:
+      'البحث والمشاركة والمتابعة، ثم خدمة تعبئة اختيارية يفعّلها المستخدم بنفسه.',
     status: 'مرحلة لاحقة',
   },
   {
     title: 'تطبيق iPhone وSafari Extension',
-    description: 'مشاركة الروابط والصور والمساعدة في تعبئة النماذج المفتوحة داخل Safari.',
+    description:
+      'مشاركة الروابط والصور والمساعدة في تعبئة النماذج المفتوحة داخل Safari.',
     status: 'مرحلة لاحقة',
   },
 ];
@@ -37,16 +41,22 @@ export default function DevicesPage() {
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-600">
               {channel.status}
             </span>
-            <h2 className="mt-4 text-lg font-black text-slate-950">{channel.title}</h2>
-            <p className="mt-2 text-sm leading-7 text-slate-500">{channel.description}</p>
+            <h2 className="mt-4 text-lg font-black text-slate-950">
+              {channel.title}
+            </h2>
+            <p className="mt-2 text-sm leading-7 text-slate-500">
+              {channel.description}
+            </p>
           </section>
         ))}
       </div>
 
+      <ExtensionBridgePanel />
+
       <section className="mt-6">
         <EmptyState
-          title="لا توجد أجهزة مرتبطة"
-          description="سيظهر كل جهاز بعد تسجيل الدخول وإتمام رمز الربط والموافقة الصريحة من المستخدم."
+          title="لا توجد أجهزة مسجلة في الحساب"
+          description="الجسر المحلي يعمل دون إنشاء سجل جهاز. سيظهر الجهاز هنا بعد اكتمال تسجيل الدخول ورمز الربط والموافقة الصريحة."
         />
       </section>
     </>
