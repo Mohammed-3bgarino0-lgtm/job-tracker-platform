@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>قدّم AI</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="brand-mark">ق</span>
+        <div>
+          <h1>قدّم AI</h1>
+          <p id="version">إضافة Chrome</p>
+        </div>
+      </header>
+
+      <section id="pending-card" class="card hidden">
+        <span class="badge warning">إذن مطلوب</span>
+        <h2>متابعة فحص الرابط</h2>
+        <p id="pending-origin"></p>
+        <button id="grant-button" type="button">منح الإذن والمتابعة</button>
+      </section>
+
+      <section class="card">
+        <span class="badge">فحص يدوي</span>
+        <h2>فحص الصفحة الحالية</h2>
+        <p>اضغط أثناء فتح صفحة وظيفة أو نتائج بحث. لا يتم إرسال طلب توظيف.</p>
+        <button id="scan-current-button" type="button" class="secondary">
+          فحص الصفحة الحالية
+        </button>
+      </section>
+
+      <section id="last-scan-card" class="card hidden">
+        <span class="badge success">آخر نتيجة</span>
+        <p id="last-scan-summary"></p>
+      </section>
+
+      <p id="status" role="status">الإضافة جاهزة.</p>
+    </main>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
