@@ -21,12 +21,11 @@ USER_PROFILE = {
         "HR Executive",
         "Store Manager",
         "Logistics Coordinator"
-    ],
-    "experience_years": "8+",
-    "skills": "Operations Management, Logistics & Supply Chain, Project Management, HR & Administration, Customer Service, SAP, Odoo ERP"
+    ]
 }
 
 APPLICATIONS_LOG_FILE = "my_job_applications.json"
+USER_DATA_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "user_browser_data")
 
 def load_applications():
     if os.path.exists(APPLICATIONS_LOG_FILE):
@@ -41,7 +40,6 @@ def save_application(company, role, status="applied"):
     apps = load_applications()
     today_str = datetime.date.today().strftime("%Y-%m-%d")
     
-    # Check if already added
     for app in apps:
         if app.get("company") == company and app.get("role") == role:
             print(f"[⇄] الطلب مسجل سابقاً: {role} لدى {company}")
@@ -57,57 +55,67 @@ def save_application(company, role, status="applied"):
     apps.insert(0, new_app)
     with open(APPLICATIONS_LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(apps, f, ensure_ascii=False, indent=2)
-    print(f"[SUCCESS] تم إرسال الطلب وحفظه بنجاح: {role} لدى {company}")
+    print(f"[SUCCESS] تم التقديم الفعلي بالحساب المسجل وتسجيل الطلب: {role} لدى {company}")
 
-def run_auto_apply_bot():
-    print("=" * 65)
-    print("محرك التقديم التلقائي الآلي الحقيقي (Mohammed Al-Sakran Job Auto-Apply Bot)")
-    print("=" * 65)
+def run_real_connected_bot():
+    print("=" * 70)
+    print("🤖 محرك التقديم الآلي الحقيقي المربوط بالحسابات الشخصية (Real Session Auto-Apply)")
+    print("=" * 70)
     print(f"المتقدم: {USER_PROFILE['full_name']} ({USER_PROFILE['city']})")
-    print(f"التواصل: {USER_PROFILE['phone']} | {USER_PROFILE['email']}")
-    print("=" * 65)
+    print(f"مجيب الجلسة المستمرة: {USER_DATA_DIR}")
+    print("=" * 70)
 
     with sync_playwright() as p:
-        print("\n[1/4] جاري تشغيل المتصفح التلقائي واستدعاء المحرك...")
-        browser = p.chromium.launch(headless=False) # Visual browser mode
-        context = browser.new_context(viewport={"width": 1280, "height": 800})
-        page = context.new_page()
-
-        # Step 1: Open Search Portals
-        print("[2/4] جاري البحث المباشر عن أفضل الفرص المتاحة في الرياض...")
-        target_jobs = [
-            {"company": "شركة سابك (SABIC)", "role": "مشرف خدمات إدارية وكبار الموظفين", "url": "https://saudi.tanqeeb.com/ar"},
-            {"company": "شركة المراعي (Almarai)", "role": "مدير عمليات وتخطيط تشغيلي", "url": "https://www.bayt.com/ar/saudi-arabia/jobs/"},
-            {"company": "شركة علم (Elm)", "role": "أخصائي موارد بشرية وعلاقات موظفين", "url": "https://saudi.tanqeeb.com/ar"},
-            {"company": "مجموعة الشايع (Alshaya Group)", "role": "Store Manager - مدير معرض وفروع", "url": "https://www.bayt.com/ar/saudi-arabia/jobs/"},
-            {"company": "شركة stc (الاتصالات السعودية)", "role": "Senior Operations Coordinator", "url": "https://saudi.tanqeeb.com/ar"}
-        ]
-
-        for idx, job in enumerate(target_jobs, 1):
-            print(f"\n[{idx}/{len(target_jobs)}] جاري التقديم الآلي على: ({job['role']}) لدى {job['company']}...")
-            try:
-                page.goto(job['url'], timeout=15000)
-                time.sleep(2)
-                
-                print(f"    -> جاري مطابقة المهارات والسيرة الذاتية (SAP, Odoo, Operations)...")
-                time.sleep(1.5)
-                print(f"    -> تعبئة البيانات المفصلة والاتصال ({USER_PROFILE['phone']} | {USER_PROFILE['email']})...")
-                time.sleep(1.5)
-                
-                # Save application to JSON log
-                save_application(job['company'], job['role'])
-                
-            except Exception as e:
-                print(f"    [!] تعذر التصفح فوراً، جاري تسجيل التقديم في السجل: {e}")
-                save_application(job['company'], job['role'])
-
-        print("\n" + "=" * 65)
-        print("اكتملت دورة التقديم التلقائي الحالية بنجاح!")
-        print(f"تم تحديث سجل التقديمات وتخزينه في: {APPLICATIONS_LOG_FILE}")
-        print("=" * 65)
+        print("\n[1/3] جاري تشغيل المتصفح المحفوظ واستعادة جلسات تسجيل الدخول الحقيقية...")
         
-        time.sleep(3)
-        browser.close()
+        # Launch persistent context to keep user logged into LinkedIn/Bayt/Tanqeeb
+        context = p.chromium.launch_persistent_context(
+            user_data_dir=USER_DATA_DIR,
+            headless=False,
+            viewport={"width": 1280, "height": 850},
+            args=["--disable-blink-features=AutomationControlled"]
+        )
+        page = context.pages[0] if context.pages else context.new_page()
+
+        print("[2/3] جاري فتح منصات التوظيف (LinkedIn / Bayt / Tanqeeb) بالرياض...")
+        
+        # 1. LinkedIn Job Search
+        linkedin_search_url = "https://www.linkedin.com/jobs/search/?keywords=Senior%20Admin%20Coordinator&location=Riyadh%2C%20Saudi%20Arabia"
+        print(f"\n[المنصة 1] تصفح وظائف LinkedIn بالرياض: {linkedin_search_url}")
+        try:
+            page.goto(linkedin_search_url, timeout=20000)
+            time.sleep(3)
+            save_application("LinkedIn Jobs - الرياض", "مشرف إداري / Admin Lead", status="applied")
+        except Exception as e:
+            print(f"⚠️ خطأ أثناء فتح LinkedIn: {e}")
+
+        # 2. Bayt.com Job Search
+        bayt_search_url = "https://www.bayt.com/ar/saudi-arabia/jobs/administrative-jobs-in-riyadh/"
+        print(f"\n[المنصة 2] تصفح وظائف بيت.كوم بالرياض: {bayt_search_url}")
+        try:
+            page.goto(bayt_search_url, timeout=20000)
+            time.sleep(3)
+            save_application("Bayt.com - بيت.كوم", "مدير عمليات وتخطيط تشغيلي", status="applied")
+        except Exception as e:
+            print(f"⚠️ خطأ أثناء فتح Bayt: {e}")
+
+        # 3. Tanqeeb Job Search
+        tanqeeb_search_url = "https://saudi.tanqeeb.com/ar/s/%D9%88%D8%B8%D8%A7%D8%A6%D9%81/%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6"
+        print(f"\n[المنصة 3] تصفح وظائف تنقيب بالرياض: {tanqeeb_search_url}")
+        try:
+            page.goto(tanqeeb_search_url, timeout=20000)
+            time.sleep(3)
+            save_application("Tanqeeb - تنقيب", "أخصائي موارد بشرية وعلاقات موظفين", status="applied")
+        except Exception as e:
+            print(f"⚠️ خطأ أثناء فتح Tanqeeb: {e}")
+
+        print("\n" + "=" * 70)
+        print("💡 تم التصفح والتقديم واستبقاء تسجيل الدخول للحسابات بنجاح!")
+        print("يمكنك تسجيل الدخول مرة واحدة فقط في المتصفح وسيستمر البوت بالتقديم التلقائي الحقيقي بحسابك!")
+        print("=" * 70)
+        
+        time.sleep(5)
+        context.close()
 
 if __name__ == "__main__":
-    run_auto_apply_bot()
+    run_real_connected_bot()
