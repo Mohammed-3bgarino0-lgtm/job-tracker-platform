@@ -1,11 +1,11 @@
-import type { SVGProps } from 'react';
+import type { ReactNode, SVGProps } from 'react';
 import type { NavigationIconName } from '@/lib/navigation';
 
 interface NavIconProps extends SVGProps<SVGSVGElement> {
   name: NavigationIconName;
 }
 
-const paths: Record<NavigationIconName, React.ReactNode> = {
+const paths: Record<NavigationIconName, ReactNode> = {
   dashboard: (
     <>
       <path d="M3 3h7v7H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 14h7v7H3z" />
