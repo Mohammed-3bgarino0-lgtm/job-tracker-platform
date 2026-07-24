@@ -5,7 +5,7 @@
     "buildCommand": "pnpm db:generate && pnpm --filter @qaddem/web build"
   },
   "deploy": {
-    "startCommand": "pnpm --filter @qaddem/web start",
+    "startCommand": "pnpm start:railway",
     "healthcheckPath": "/api/health",
     "healthcheckTimeout": 120,
     "restartPolicyType": "ON_FAILURE",

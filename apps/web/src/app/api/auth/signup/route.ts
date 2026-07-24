@@ -1,50 +1,97 @@
+import { Prisma } from '@prisma/client';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { prisma } from '../../../../lib/prisma';
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { email, name, phone } = body;
+const optionalText = (maxLength: number) =>
+  z
+    .string()
+    .trim()
+    .max(maxLength)
+    .optional()
+    .transform((value) => (value ? value : null));
 
-    if (!email || typeof email !== 'string') {
-      return NextResponse.json({ error: 'البريد الإلكتروني مطلوب.' }, { status: 400 });
+const signupSchema = z.object({
+  email: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  name: optionalText(120),
+  phone: optionalText(30),
+});
+
+export async function POST(request: Request) {
+  try {
+    const parsed = signupSchema.safeParse(await request.json());
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        {
+          error: 'بيانات التسجيل غير صالحة.',
+          issues: parsed.error.issues.map((issue) => ({
+            path: issue.path.join('.'),
+            message: issue.message,
+          })),
+        },
+        { status: 400 },
+      );
     }
 
-    // Check if user already exists
-    let user = await prisma.user.findUnique({
-      where: { email }
+    const { email, name, phone } = parsed.data;
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        profile: true,
+        careerProfile: true,
+      },
     });
 
-    if (!user) {
-      // Create user and initial profile in Prisma
-      user = await prisma.user.create({
-        data: {
-          email,
-          name: name || null,
-          phone: phone || null,
-          profile: {
-            create: {}
-          },
-          careerProfile: {
-            create: {
-              headline: 'باحث عن عمل',
-              targetTitle: 'فرصة وظيفية'
-            }
-          }
-        },
-        include: {
-          profile: true,
-          careerProfile: true
-        }
+    if (existingUser) {
+      return NextResponse.json({
+        success: true,
+        created: false,
+        user: existingUser,
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      user
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name,
+        phone,
+        profile: {
+          create: {},
+        },
+        careerProfile: {
+          create: {},
+        },
+      },
+      include: {
+        profile: true,
+        careerProfile: true,
+      },
     });
-  } catch (error: any) {
-    console.error('Signup Error:', error);
-    return NextResponse.json({ error: error.message || 'حدث خطأ أثناء التسجيل.' }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        success: true,
+        created: true,
+        user,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'البريد الإلكتروني مستخدم بالفعل.' },
+        { status: 409 },
+      );
+    }
+
+    console.error('Signup error', error);
+    return NextResponse.json(
+      { error: 'تعذر إنشاء المستخدم حاليًا.' },
+      { status: 500 },
+    );
   }
 }
