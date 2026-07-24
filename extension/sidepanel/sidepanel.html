@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>مساعد قدّم الجانبي | Wdhifaa Adapter</title>
+    <title>مساعد قدّم الجانبي | Universal Job Analyzer</title>
     <style>
         body {
             font-family: 'Tajawal', system-ui, sans-serif;
@@ -19,6 +19,15 @@
             margin-bottom: 12px;
         }
         .header h3 { margin: 0; font-size: 15px; font-weight: 800; }
+        .input-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-bottom: 8px;
+            box-sizing: border-box;
+        }
         .btn {
             width: 100%;
             padding: 10px;
@@ -29,10 +38,11 @@
             font-weight: bold;
             cursor: pointer;
             font-size: 13px;
-            margin-top: 6px;
+            margin-bottom: 6px;
         }
         .btn:hover { background: #064e3b; }
         .btn-outline { background: white; color: #065f46; border: 1px solid #a7f3d0; }
+        
         .job-card {
             background: white;
             border: 1px solid #e2e8f0;
@@ -51,11 +61,7 @@
         .tag-email { background: #d1fae5; color: #065f46; }
         .tag-whatsapp { background: #dcfce7; color: #15803d; }
         .tag-form { background: #dbeafe; color: #1e40af; }
-        .tag-ocr { background: #fef3c7; color: #b45309; }
-
-        .badge-female { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
-        .badge-male { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .badge-both { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+        .tag-link { background: #f1f5f9; color: #334155; }
 
         .filter-btn { padding: 4px 8px; font-size: 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-weight: bold; }
         .filter-btn.active { background: #065f46; color: white; border-color: #065f46; }
@@ -63,29 +69,37 @@
 </head>
 <body>
     <div class="header">
-        <h3>📌 قدّم | محول @Wdhifaa على X</h3>
-        <span style="font-size: 10px;">سحب وتصنيف المنشورات وتحديد الجنس الموجه</span>
+        <h3>📌 قدّم | المحلل العام لمصادر الوظائف v1.2</h3>
+        <span style="font-size: 10px;">تحليل أي رابط، منشور، أو موقع توظيف</span>
     </div>
 
-    <button class="btn" onclick="scrapeWdhifaaPosts()"><i class="fa-solid fa-cloud-arrow-down"></i> سحب وظائف @Wdhifaa الظاهرة</button>
-    <button class="btn btn-outline" onclick="downloadEMLDraft()"><i class="fa-solid fa-file-export"></i> تنزيل مسودة EML مع السيرة المرفقة</button>
-
-    <!-- Gender Filter Buttons -->
-    <div style="display:flex; gap:4px; margin-top:10px; margin-bottom:10px; flex-wrap:wrap;">
-        <button id="f-all" class="filter-btn active" onclick="filterByGender('all')">الكل</button>
-        <button id="f-female" class="filter-btn" onclick="filterByGender('female')">👩 للنساء فقط</button>
-        <button id="f-male" class="filter-btn" onclick="filterByGender('male')">👨 للرجال فقط</button>
-        <button id="f-both" class="filter-btn" onclick="filterByGender('both')">👫 للجميع</button>
+    <!-- Universal Link Input -->
+    <div style="margin-bottom:12px;">
+        <label style="font-size:11px; font-weight:bold; color:#334155; display:block; margin-bottom:4px;">حلّل أي رابط وظائف:</label>
+        <input type="url" id="universal-url-input" class="input-box" placeholder="ألصق رابط X، لينكد إن، موقع شركة، أو صفحة وظائف...">
+        <button class="btn" onclick="analyzeUniversalUrl()"><i class="fa-solid fa-wand-magic-sparkles"></i> فتح الرابط وتحليله</button>
+        <button class="btn btn-outline" onclick="scrapeCurrentActiveTab()"><i class="fa-solid fa-magnifying-glass"></i> تحليل الصفحة الحالية</button>
     </div>
 
-    <div style="border-top: 1px solid #e2e8f0; padding-top: 10px;">
-        <h4 style="font-size: 12px; font-weight: 800; margin-bottom: 8px;">الفرص المسحوبة والمصنفة:</h4>
-        <div id="wdhifaa-scraped-list">
-            <!-- Dynamic jobs list injected here -->
-        </div>
+    <!-- 5 Independent Filters -->
+    <div style="display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap;">
+        <button id="f-all" class="filter-btn active" onclick="setChannelFilter('all')">الكل</button>
+        <button id="f-email" class="filter-btn" onclick="setChannelFilter('email')">📧 البريد</button>
+        <button id="f-whatsapp" class="filter-btn" onclick="setChannelFilter('whatsapp')">💬 الواتساب</button>
+        <button id="f-form" class="filter-btn" onclick="setChannelFilter('form')">📋 النماذج</button>
+        <button id="f-link" class="filter-btn" onclick="setChannelFilter('link')">🔗 الروابط</button>
     </div>
 
-    <script src="../adapters/wdhifaa-adapter.js"></script>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <h4 style="font-size: 12px; font-weight: 800; margin:0;">الفرص المسحوبة (<span id="stored-count">0</span> / 300):</h4>
+        <button onclick="exportStoredJobsJSON()" style="padding:2px 6px; font-size:10px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:4px; cursor:pointer;">تصدير JSON</button>
+    </div>
+
+    <div id="universal-jobs-list">
+        <!-- Dynamic Universal Jobs injected here -->
+    </div>
+
+    <script src="../adapters/universal-adapter.js"></script>
     <script src="sidepanel.js"></script>
 </body>
 </html>

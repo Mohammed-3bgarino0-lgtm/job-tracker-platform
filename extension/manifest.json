@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "قدّم | Qaddem AI - محول وظائف @Wdhifaa وتعبئة الطلبات",
-  "version": "1.1.0",
-  "description": "إضافة قدّم | Qaddem AI المجهزة بمحول وظائف @Wdhifaa لسحب وتصنيف الفرص على X وتوليد مسودات EML وتعبئة استمارات التوظيف بموافقتك الصريحة دون تجاوز CAPTCHA أو OTP أو نفاذ.",
+  "name": "قدّم | Qaddem AI - المحلل العام لمصادر الوظائف وتعبئة الطلبات",
+  "version": "1.2.0",
+  "description": "إضافة قدّم | Qaddem AI المجهزة بالمحلل العام لمصادر الوظائف لتحليل أي رابط أو منشور واستخراج الإيميلات والأرقام وتوليد مسودات EML وتعبئة الاستمارات بموافقتك الصريحة دون تجاوز CAPTCHA أو OTP أو نفاذ.",
   "permissions": [
     "activeTab",
     "storage",
@@ -11,17 +11,16 @@
   ],
   "host_permissions": [
     "https://*/*",
-    "https://x.com/*",
-    "https://twitter.com/*"
+    "http://*/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["https://*/*", "https://x.com/*", "https://twitter.com/*"],
+      "matches": ["https://*/*", "http://*/*"],
       "css": ["styles.css"],
-      "js": ["adapters/generic-adapter.js", "adapters/wdhifaa-adapter.js", "content.js"]
+      "js": ["adapters/generic-adapter.js", "adapters/universal-adapter.js", "content.js"]
     }
   ],
   "side_panel": {

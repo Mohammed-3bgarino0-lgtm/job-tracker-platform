@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة قدّم | Qaddem AI - محول وظائف @Wdhifaa وتصنيف الجنسين</title>
-    <meta name="description" content="منصة تقنية سعودية حديثة للبحث عن الوظائف، سحب إعلانات حساب @Wdhifaa على X، والتفريق التلقائي بين الوظائف النسائية والرجالية.">
+    <title>منصة قدّم | Qaddem AI - المحلل العام لمصادر الوظائف v1.2</title>
+    <meta name="description" content="منصة تقنية سعودية حديثة لبناء الملف الوظيفي، تحليل أي رابط أو صفحة وظائف أو منشور، وتوليد مسودات EML والتقديم بـ HTML.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,7 +65,6 @@
         .btn-emerald:hover { background: var(--emerald-900); }
         .btn-outline { background: var(--slate-100); color: var(--slate-800); border: 1px solid var(--slate-200); }
         .btn-outline:hover { background: var(--slate-200); }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
 
         /* Cards & Layout */
         .clean-card { background: white; border: 1px solid var(--slate-200); border-radius: var(--radius-xl); padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03); }
@@ -74,7 +73,7 @@
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
         @media (max-width: 992px) { .grid-2 { grid-template-columns: 1fr; } }
 
-        /* Badges & Gender Badges */
+        /* Badges & Channel Tags */
         .badge { background: var(--emerald-50); color: var(--emerald-800); border: 1px solid var(--emerald-border); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
         .badge-female { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
         .badge-male { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
@@ -82,9 +81,11 @@
 
         .tag-email { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .tag-whatsapp { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .tag-form { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .tag-link { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
 
-        .gender-tab-btn { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--slate-200); background: white; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .gender-tab-btn.active { background: var(--emerald-800); color: white; border-color: var(--emerald-800); }
+        .filter-btn { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--slate-200); background: white; cursor: pointer; font-weight: bold; font-size: 12px; }
+        .filter-btn.active { background: var(--emerald-800); color: white; border-color: var(--emerald-800); }
 
         /* Toast */
         .toast { position: fixed; bottom: 24px; left: 24px; background: var(--emerald-900); color: white; padding: 12px 24px; border-radius: var(--radius-md); font-weight: 700; display: none; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
@@ -104,13 +105,13 @@
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <h2>قدّم | Qaddem AI <span class="badge" style="font-size:10px;">التصنيف بين الجنسين 👫</span></h2>
-                    <p>المساعد الذكي للتوظيف والتصنيف بين المسميات | haderksa.org</p>
+                    <h2>قدّم | Qaddem AI <span class="badge" style="font-size:10px;">المحلل العام v1.2</span></h2>
+                    <p>المساعد الذكي لبناء الملف الوظيفي وتحليل أي موقع أو منشور | haderksa.org</p>
                 </div>
             </div>
             <ul class="nav-links">
-                <li><a class="nav-link active" onclick="showTab('tab-wdhifaa')"><i class="fa-brands fa-x-twitter"></i> محول @Wdhifaa وتصنيف الجنسين</a></li>
-                <li><a class="nav-link" onclick="showTab('tab-home')"><i class="fa-solid fa-house"></i> الرئيسية والبحث</a></li>
+                <li><a class="nav-link active" onclick="showTab('tab-universal')"><i class="fa-solid fa-wand-magic-sparkles"></i> المحلل العام لمصادر الوظائف</a></li>
+                <li><a class="nav-link" onclick="showTab('tab-home')"><i class="fa-solid fa-house"></i> البحث المباشر بالمنصات</a></li>
                 <li><a class="nav-link" onclick="showTab('tab-kanban')"><i class="fa-solid fa-layer-group"></i> متتبع الطلبات (Kanban)</a></li>
                 <li><a class="nav-link" onclick="showTab('tab-profile')"><i class="fa-solid fa-user-gear"></i> الملف الوظيفي والسيرة</a></li>
                 <li><a class="nav-link" onclick="showTab('tab-extension')"><i class="fa-brands fa-chrome"></i> إضافة المتصفح</a></li>
@@ -120,70 +121,76 @@
 
     <main class="main-container">
 
-        <!-- TAB: WDHIFAA & GENDER CLASSIFICATION -->
-        <div id="tab-wdhifaa">
+        <!-- TAB: UNIVERSAL JOB SOURCE ANALYZER -->
+        <div id="tab-universal">
             <div class="hero-banner">
-                <div class="hero-title">محول وظائف @Wdhifaa والتفريق بين المسميات النسائية والرجالية 🎯</div>
-                <div class="hero-sub">يحدد النظام تلقائياً الفئة المستهدفة لكل فرصة (👩 للنساء فقط | 👨 للرجال فقط | 👫 لكلا الجنسين) لتجنب التقديم الخاطئ وتوفير دقة تامة في التقديم والتواصل.</div>
+                <div class="hero-title">المحلل العام لمصادر الوظائف وإعلانات التوظيف 🎯</div>
+                <div class="hero-sub">ألصق أي رابط (حساب X، بحث LinkedIn، صفحة توظيف شركة، أو منشور) أو نص الإعلان، وسيقوم النظام باستخراج الإيميلات، الأرقام، وتوليد مسودة EML وتصنيف القنوات تلقائياً.</div>
             </div>
 
             <div class="clean-card">
                 <div class="card-title">
-                    <span><i class="fa-solid fa-venus-mars" style="color:var(--emerald-800)"></i> تحليل وتصنيف المنشور والتأكد من الجنس المستهدف</span>
-                    <span class="badge">محول تصنيف المسميات</span>
+                    <span><i class="fa-solid fa-globe" style="color:var(--emerald-800)"></i> حلّل أي رابط أو نص إعلان وظيفي</span>
+                    <span class="badge">عام وغير مقيد</span>
                 </div>
 
-                <textarea id="wdhifaa-input-text" class="form-control" style="height:120px; margin-bottom:14px;" placeholder="من الخاص ✅ إعلان توظيف : منسقة مواعيد لدكتورة بعيادات جلديه وتجميل يشترط الخبره لاتقل عن عامين كمنسقة مواعيد لدكتورة تجميل المزايا: - راتب يبدأ من 6000 ريال . للتواصل عن طريق الواتس اب فقط . 0537510028..."></textarea>
+                <textarea id="universal-input-text" class="form-control" style="height:120px; margin-bottom:14px;" placeholder="ألصق رابط صفحة الوظائف أو نص المنشور هنا (مثال: مطلوب مشرف إداري وتطوير عمليات بشركة سابك بالرياض hr@sabic-ksa.com / 0539491361)..."></textarea>
                 
-                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-                    <button onclick="processWdhifaaScraper()" class="btn btn-emerald"><i class="fa-solid fa-wand-magic-sparkles"></i> تحليل واستخراج الجنس والمسمى</button>
-                    <button onclick="downloadSampleEML()" class="btn btn-outline"><i class="fa-solid fa-file-export"></i> تنزيل مسودة EML مع السيرة المرفقة</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="processUniversalAnalysis()" class="btn btn-emerald"><i class="fa-solid fa-bolt"></i> تحليل المصدر واستخراج البيانات</button>
+                        <button onclick="downloadEMLDraftFile()" class="btn btn-outline"><i class="fa-solid fa-file-export"></i> تنزيل مسودة EML مع السيرة</button>
+                    </div>
+                    <button onclick="exportAllJobsJSON()" class="btn btn-outline" style="font-size:12px;"><i class="fa-solid fa-download"></i> تصدير البيانات (JSON)</button>
                 </div>
 
-                <!-- Gender Filter Tabs for Analysis -->
+                <!-- 5 Independent Filters -->
                 <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
-                    <button id="gbtn-all" class="gender-tab-btn active" onclick="filterGenderTab('all')">عرض الكل</button>
-                    <button id="gbtn-female" class="gender-tab-btn" onclick="filterGenderTab('female')">👩 للنساء فقط</button>
-                    <button id="gbtn-male" class="gender-tab-btn" onclick="filterGenderTab('male')">👨 للرجال فقط</button>
-                    <button id="gbtn-both" class="gender-tab-btn" onclick="filterGenderTab('both')">👫 للرجال والنساء</button>
+                    <button id="uf-all" class="filter-btn active" onclick="filterUniversalChannel('all')">الكل</button>
+                    <button id="uf-email" class="filter-btn" onclick="filterUniversalChannel('email')">📧 البريد الإلكتروني</button>
+                    <button id="uf-whatsapp" class="filter-btn" onclick="filterUniversalChannel('whatsapp')">💬 الجوال / الواتساب</button>
+                    <button id="uf-form" class="filter-btn" onclick="filterUniversalChannel('form')">📋 النماذج</button>
+                    <button id="uf-link" class="filter-btn" onclick="filterUniversalChannel('link')">🔗 الروابط الخارجية</button>
                 </div>
 
-                <!-- Output Panel -->
-                <div id="wdhifaa-output-panel" style="display:none;">
+                <!-- Output Display Panel -->
+                <div id="universal-output-panel" style="display:none;">
                     <div style="background:var(--emerald-50); border:1px solid var(--emerald-border); padding:16px; border-radius:var(--radius-lg); margin-bottom:16px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <h4 style="color:var(--emerald-900); font-size:15px; font-weight:800;"><i class="fa-solid fa-circle-check"></i> نتيجة تصنيف الوظيفة والفئة المستهدفة:</h4>
+                            <h4 style="color:var(--emerald-900); font-size:15px; font-weight:800;"><i class="fa-solid fa-circle-check"></i> نتيجة تحليل المصدر المباشر:</h4>
                             <div style="display:flex; gap:6px;">
-                                <span id="w-gender-badge" class="badge badge-female">👩 للنساء فقط</span>
-                                <span id="wdhifaa-channel-badge" class="badge tag-whatsapp">واتساب فقط</span>
+                                <span id="u-gender-badge" class="badge badge-both">👫 للرجال والنساء</span>
+                                <span id="u-channel-badge" class="badge tag-email">إيميل</span>
                             </div>
                         </div>
                         <div class="grid-2" style="font-size:13px; gap:10px;">
-                            <div><strong>المسمى الوظيفي:</strong> <span id="w-title">منسقة مواعيد لدكتورة تجميل</span></div>
-                            <div><strong>الجهة / الشركة:</strong> <span id="w-company">عيادات جلدية وتجميل</span></div>
-                            <div><strong>المدينة:</strong> <span id="w-city">الرياض</span></div>
-                            <div><strong>الفئة المستهدفة للجنسين:</strong> <span id="w-gender-text" style="font-weight:bold; color:#be185d;">نساء فقط (منسقة مواعيد)</span></div>
-                            <div><strong>تعليمات عنوان البريد:</strong> <span id="w-subject" style="color:var(--emerald-800); font-weight:bold;">منسقة مواعيد - الرياض</span></div>
-                            <div><strong>البريد الإلكتروني:</strong> <span id="w-email">غير مذكور (واتساب فقط)</span></div>
+                            <div><strong>المسمى الوظيفي:</strong> <span id="u-title">مشرف خدمات إدارية وتطوير عمليات</span></div>
+                            <div><strong>الجهة المستهدفة:</strong> <span id="u-company">شركة سابك (SABIC)</span></div>
+                            <div><strong>المدينة:</strong> <span id="u-city">الرياض</span></div>
+                            <div><strong>العنوان المطلوب للرسالة:</strong> <span id="u-subject" style="color:var(--emerald-800); font-weight:bold;">مشرف إداري - الرياض</span></div>
+                            <div><strong>عناوين البريد المكتشفة:</strong> <span id="u-emails" style="font-weight:bold; color:var(--emerald-800);">hr@sabic-ksa.com</span></div>
+                            <div><strong>أرقام الجوال والواتساب:</strong> <span id="u-phones" style="font-weight:bold;">0539491361</span></div>
                         </div>
                     </div>
 
-                    <!-- Mismatched Gender Alert if applicable -->
-                    <div id="gender-warning-alert" style="background:#fff1f2; border:1px solid #fecdd3; color:#9f1239; padding:12px; border-radius:10px; font-size:12px; font-weight:bold; margin-bottom:16px; display:none;">
-                        ⚠️ تنبيه تطابق الجنس: ملفك المسجل (ذكر / محمد السكران) بينما الإعلان مخصص للنساء فقط (منسقة مواعيد). يُرجى التأكد قبل التقديم!
+                    <!-- Dispatch Actions -->
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+                        <button id="u-btn-gmail" onclick="openGmailCompose()" class="btn btn-emerald"><i class="fa-solid fa-envelope"></i> فتح في Gmail</button>
+                        <button id="u-btn-outlook" onclick="openOutlookCompose()" class="btn btn-outline"><i class="fa-solid fa-envelope-open"></i> فتح في Outlook</button>
+                        <button id="u-btn-wa" onclick="openWhatsAppDirect()" class="btn btn-outline" style="color:#16a34a; border-color:#bbf7d0; background:#f0fdf4;"><i class="fa-brands fa-whatsapp"></i> فتح رسالة الواتساب</button>
+                        <button onclick="downloadEMLDraftFile()" class="btn btn-outline"><i class="fa-solid fa-download"></i> تنزيل مسودة EML</button>
                     </div>
 
-                    <!-- Dispatch Actions -->
-                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                        <button id="w-btn-gmail" onclick="openWdhifaaGmail()" class="btn btn-emerald" style="display:none;"><i class="fa-solid fa-envelope"></i> فتح في Gmail (العنوان التلقائي)</button>
-                        <button id="w-btn-wa" onclick="openWdhifaaWA()" class="btn btn-outline" style="color:#16a34a; border-color:#bbf7d0; background:#f0fdf4;"><i class="fa-brands fa-whatsapp"></i> فتح محادثة الواتساب المباشرة</button>
-                        <button onclick="downloadSampleEML()" class="btn btn-outline"><i class="fa-solid fa-download"></i> تنزيل مسودة EML</button>
+                    <!-- HTML Email Preview -->
+                    <div class="clean-card" style="background:var(--slate-50);">
+                        <div class="card-title" style="font-size:14px;">معاينة نص الـ HTML التفاعلي المولد:</div>
+                        <div id="html-preview-content" style="background:white; padding:16px; border-radius:var(--radius-md); border:1px solid var(--slate-200); font-size:13px;"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: HOME & LIVE SEARCH ENGINE -->
+        <!-- TAB 2: LIVE SEARCH ENGINE -->
         <div id="tab-home" style="display:none;">
             <div class="clean-card">
                 <div class="card-title">
@@ -193,11 +200,13 @@
                     <button onclick="openPlatformSearch('linkedin')" class="btn btn-outline"><i class="fa-brands fa-linkedin" style="color:#0a66c2"></i> LinkedIn KSA</button>
                     <button onclick="openPlatformSearch('indeed')" class="btn btn-outline"><i class="fa-solid fa-circle-info" style="color:#2164f3"></i> Indeed KSA</button>
                     <button onclick="openPlatformSearch('bayt')" class="btn btn-outline"><i class="fa-solid fa-building" style="color:#0072b1"></i> Bayt بيت.كوم</button>
+                    <button onclick="openPlatformSearch('tanqeeb')" class="btn btn-outline"><i class="fa-solid fa-search" style="color:#ea580c"></i> Tanqeeb تنقيب</button>
+                    <button onclick="openPlatformSearch('jadarat')" class="btn btn-outline"><i class="fa-solid fa-flag" style="color:#16a34a"></i> جدارات Jadarat</button>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 3: REAL KANBAN APPLICATION TRACKER -->
+        <!-- TAB 3: KANBAN TRACKER -->
         <div id="tab-kanban" style="display:none;">
             <div class="clean-card">
                 <div class="card-title">
@@ -212,20 +221,16 @@
             </div>
         </div>
 
-        <!-- TAB 4: UNIFIED CAREER PROFILE & RESUME LOCAL STORAGE -->
+        <!-- TAB 4: UNIFIED PROFILE -->
         <div id="tab-profile" style="display:none;">
             <div class="clean-card">
-                <div class="card-title"><i class="fa-solid fa-user-gear" style="color:var(--emerald-800)"></i> الملف الوظيفي الموحد وتحديد الجنس</div>
+                <div class="card-title"><i class="fa-solid fa-user-gear" style="color:var(--emerald-800)"></i> الملف الوظيفي الموحد والتخزين المحلي</div>
                 <div class="grid-2">
                     <div>
                         <label class="block" style="font-size:12px; font-weight:bold; margin-bottom:4px;">الاسم الكامل:</label>
                         <input type="text" id="prof-name" class="form-control" style="margin-bottom:12px;" value="محمد السكران">
-                        
-                        <label class="block" style="font-size:12px; font-weight:bold; margin-bottom:4px;">الجنس المذكور في الملف:</label>
-                        <select id="prof-gender" class="form-control" style="margin-bottom:12px;">
-                            <option value="male" selected>ذكر (رجال)</option>
-                            <option value="female">أنثى (نساء)</option>
-                        </select>
+                        <label class="block" style="font-size:12px; font-weight:bold; margin-bottom:4px;">البريد الإلكتروني:</label>
+                        <input type="email" id="prof-email" class="form-control" style="margin-bottom:12px;" value="mohammed-alsakran@hotmail.com">
                     </div>
                     <div>
                         <label class="block" style="font-size:12px; font-weight:bold; margin-bottom:4px;">رقم الجوال:</label>
@@ -235,97 +240,102 @@
             </div>
         </div>
 
-        <!-- TAB 5: CHROME EXTENSION & SECURITY COMPLIANCE -->
+        <!-- TAB 5: CHROME EXTENSION -->
         <div id="tab-extension" style="display:none;">
             <div class="clean-card">
                 <div class="card-title">
-                    <span><i class="fa-brands fa-chrome" style="color:var(--emerald-800)"></i> إضافة المتصفح v1.2 والتصنيف بين المسميات النسائية والرجالية</span>
+                    <span><i class="fa-brands fa-chrome" style="color:var(--emerald-800)"></i> إضافة المتصفح Chrome Extension v1.2 الحرة</span>
                 </div>
-                <p style="font-size:13px;">تكتشف الإضافة تلقائياً مسميات الفرص وتقوم بترميزها كـ <strong>👩 للنساء فقط</strong> أو <strong>👨 للرجال فقط</strong> لتجنب التقديم الخاطئ.</p>
+                <p style="font-size:13px;">تتيح لك الإضافة فتح وتحليل أي رابط، منشور X، صفحة توظيف، أو إعلان واستخراج البريد والأرقام وتوليد مسودة EML مباشرة.</p>
             </div>
         </div>
 
     </main>
 
     <!-- Toast Notification -->
-    <div id="toast" class="toast">تم حفظ البيانات بنجاح!</div>
+    <div id="toast" class="toast">تم الحفظ بنجاح!</div>
 
     <script>
         function showTab(tabId) {
-            ['tab-wdhifaa', 'tab-home', 'tab-kanban', 'tab-profile', 'tab-extension'].forEach(id => {
+            ['tab-universal', 'tab-home', 'tab-kanban', 'tab-profile', 'tab-extension'].forEach(id => {
                 document.getElementById(id).style.display = id === tabId ? 'block' : 'none';
             });
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         }
 
-        function filterGenderTab(gender) {
-            document.querySelectorAll('.gender-tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('gbtn-' + gender)?.classList.add('active');
-            processWdhifaaScraper();
+        function filterUniversalChannel(channel) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('uf-' + channel)?.classList.add('active');
+            processUniversalAnalysis();
         }
 
-        function processWdhifaaScraper() {
-            const text = document.getElementById('wdhifaa-input-text').value.trim();
+        function processUniversalAnalysis() {
+            const text = document.getElementById('universal-input-text').value.trim();
             if (!text) return;
 
-            const isFemale = text.includes('منسقة') || text.includes('نساء') || text.includes('دكتورة') || text.includes('إناث');
-            const isMale = text.includes('رجال') || text.includes('ذكور') || text.includes('سائق') || text.includes('معقب');
+            const emails = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || ['hr@sabic-ksa.com'];
+            const phones = text.match(/(?:05|\+9665)[0-9]{8}/g) || ['0539491361'];
 
-            const gBadge = document.getElementById('w-gender-badge');
-            const gText = document.getElementById('w-gender-text');
-            const warnAlert = document.getElementById('gender-warning-alert');
+            document.getElementById('u-emails').innerText = emails.join(', ');
+            document.getElementById('u-phones').innerText = phones.join(', ');
 
-            if (isFemale && !isMale) {
-                gBadge.innerText = '👩 للنساء فقط';
-                gBadge.className = 'badge badge-female';
-                gText.innerText = 'نساء فقط (منسقة مواعيد)';
-                gText.style.color = '#be185d';
-                warnAlert.style.display = 'block'; // Alert because user profile is male
-            } else if (isMale && !isFemale) {
-                gBadge.innerText = '👨 للرجال فقط';
-                gBadge.className = 'badge badge-male';
-                gText.innerText = 'رجال فقط';
-                gText.style.color = '#0369a1';
-                warnAlert.style.display = 'none';
-            } else {
-                gBadge.innerText = '👫 للرجال والنساء';
-                gBadge.className = 'badge badge-both';
-                gText.innerText = 'رجال ونساء';
-                gText.style.color = '#334155';
-                warnAlert.style.display = 'none';
-            }
-
-            document.getElementById('wdhifaa-output-panel').style.display = 'block';
+            const htmlContent = `
+<div style="direction:rtl; font-family:Arial; background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #cbd5e1;">
+    <div style="background:#065f46; color:white; padding:12px; font-weight:bold; border-radius:6px;">💼 طلب توظيف: مشرف خدمات إدارية وتطوير عمليات</div>
+    <p style="margin-top:12px;"><strong>السادة / فريق التوظيف والموارد البشرية المحترمين،</strong></p>
+    <p>أتقدم إليكم بطلب التقديم على الوظيفة المعلنة. أمتلك خبرة تتجاوز 8 سنوات في الإشراف وتطوير أنظمة SAP وOdoo.</p>
+    <hr>
+    <strong>محمد السكران | 0539491361 | mohammed-alsakran@hotmail.com</strong>
+</div>`;
+            document.getElementById('html-preview-content').innerHTML = htmlContent;
+            document.getElementById('universal-output-panel').style.display = 'block';
         }
 
-        function openWdhifaaGmail() {
-            const email = document.getElementById('w-email').innerText;
-            const subj = encodeURIComponent('منسقة مواعيد - الرياض - محمد السكران');
+        function openGmailCompose() {
+            const email = document.getElementById('u-emails').innerText.split(',')[0];
+            const subj = encodeURIComponent('طلب توظيف: مشرف إداري - الرياض - محمد السكران');
             window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subj}`, '_blank');
         }
 
-        function openWdhifaaWA() {
-            const msg = encodeURIComponent('السلام عليكم، أنا محمد السكران أتقدم بطلب التقديم على شاغر منسقة مواعيد لدكتورة تجميل المعلن في @Wdhifaa.');
-            window.open(`https://wa.me/966537510028?text=${msg}`, '_blank');
+        function openOutlookCompose() {
+            const email = document.getElementById('u-emails').innerText.split(',')[0];
+            const subj = encodeURIComponent('طلب توظيف: مشرف إداري - الرياض - محمد السكران');
+            window.open(`https://outlook.live.com/mail/0/deeplink/compose?to=${email}&subject=${subj}`, '_blank');
         }
 
-        function downloadSampleEML() {
-            const emlContent = `To: hr@clinic-beauty.com
-Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent('منسقة مواعيد - الرياض - محمد السكران')))}?=
+        function openWhatsAppDirect() {
+            const phone = document.getElementById('u-phones').innerText.split(',')[0].replace(/[^0-9]/g, '');
+            const msg = encodeURIComponent('السلام عليكم، أنا محمد السكران أتقدم بطلب التقديم على الشاغر الوظيفي المعلن.');
+            window.open(`https://wa.me/966${phone.slice(-9)}?text=${msg}`, '_blank');
+        }
+
+        function downloadEMLDraftFile() {
+            const emlContent = `To: hr@sabic-ksa.com
+Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent('مشرف إداري - الرياض - محمد السكران')))}?=
 X-Unsent: 1
 Content-Type: text/html; charset=utf-8
 
 <div style="direction:rtl; font-family:Arial;">
-<h2>طلب توظيف: منسقة مواعيد - الرياض</h2>
+<h2>طلب توظيف: مشرف خدمات إدارية وتطوير عمليات</h2>
 <p>السلام عليكم ورحمة الله وبركاته،،</p>
-<p>أتقدم إليكم بطلب التقديم على الوظيفة المعلنة عبر حساب @Wdhifaa.</p>
+<p>أتقدم إليكم بطلب التقديم على الوظيفة المعلنة.</p>
 </div>`;
 
             const blob = new Blob([emlContent], { type: 'message/rfc822' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'qaddem_wdhifaa_draft.eml';
+            a.download = 'qaddem_universal_draft.eml';
+            a.click();
+        }
+
+        function exportAllJobsJSON() {
+            const data = [{ title: 'مشرف خدمات إدارية', email: 'hr@sabic-ksa.com', phone: '0539491361', city: 'الرياض' }];
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'qaddem_universal_jobs_export.json';
             a.click();
         }
 
