@@ -50,6 +50,18 @@ Qaddem AI is a user-controlled job discovery, application assistance, and applic
 - No use of sensitive fields without explicit approval.
 - No claim that official sources provide an API until verified and integrated.
 
+## Deployment gate
+
+The public domain must not be switched to the new application until all of the following are true:
+
+1. Dependency installation succeeds in CI.
+2. Prisma schema validation and client generation succeed.
+3. TypeScript checks and automated tests succeed.
+4. The production Next.js build succeeds.
+5. A server-capable preview deployment is reviewed on desktop and mobile.
+6. PostgreSQL and required environment variables are configured.
+7. The existing public site remains available until the replacement passes a smoke test.
+
 ## Next implementation order
 
 1. CI validation and merge of resume parsing foundation.
