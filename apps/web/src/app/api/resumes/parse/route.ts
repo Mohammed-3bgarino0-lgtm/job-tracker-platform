@@ -19,31 +19,29 @@ export async function POST(request: Request) {
     const fileValue = formData.get('file');
     const userIdValue = formData.get('userId');
 
-    if (!(fileValue instanceof File) || typeof userIdValue !== 'string') {
+    if (!(fileValue instanceof File)) {
       return NextResponse.json(
-        { error: 'الملف ومعرف المستخدم مطلوبان.' },
+        { error: 'ملف السيرة مطلوب.' },
         { status: 400 },
       );
     }
 
-    const userId = userIdValue.trim();
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'معرف المستخدم مطلوب.' },
-        { status: 400 },
-      );
-    }
+    const userId =
+      typeof userIdValue === 'string' ? userIdValue.trim() : '';
+    const databaseConfigured = Boolean(process.env.DATABASE_URL);
 
-    const userExists = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { id: true },
-    });
+    if (databaseConfigured && userId) {
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true },
+      });
 
-    if (!userExists) {
-      return NextResponse.json(
-        { error: 'المستخدم غير موجود.' },
-        { status: 404 },
-      );
+      if (!userExists) {
+        return NextResponse.json(
+          { error: 'المستخدم غير موجود.' },
+          { status: 404 },
+        );
+      }
     }
 
     const buffer = Buffer.from(await fileValue.arrayBuffer());
@@ -63,6 +61,25 @@ export async function POST(request: Request) {
 
     const parsedData = parseResumeText(rawText);
     const confidenceScore = calculateOverallConfidence(parsedData);
+
+    if (!databaseConfigured || !userId) {
+      return NextResponse.json({
+        success: true,
+        mode: 'preview',
+        canApprove: false,
+        databaseConfigured,
+        resumeId: null,
+        extractionId: null,
+        confidenceScore,
+        data: parsedData,
+        storage: {
+          persisted: false,
+          message: databaseConfigured
+            ? 'تم التحليل للمعاينة فقط. سيُتاح الحفظ بعد تسجيل الدخول.'
+            : 'تم التحليل للمعاينة فقط. قاعدة البيانات غير مرتبطة بعد، لذلك لم تُحفظ النتيجة.',
+        },
+      });
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       const resume = await tx.resume.create({
@@ -104,6 +121,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      mode: 'persisted',
+      canApprove: true,
+      databaseConfigured: true,
       resumeId: result.resume.id,
       extractionId: result.extraction.id,
       confidenceScore,
@@ -111,7 +131,7 @@ export async function POST(request: Request) {
       storage: {
         persisted: false,
         message:
-          'تم تحليل الملف في الذاكرة فقط. ربط التخزين السحابي سيتم في مرحلة مستقلة.',
+          'تم حفظ نتيجة الاستخراج، بينما ملف السيرة نفسه عولج في الذاكرة فقط.',
       },
     });
   } catch (error) {

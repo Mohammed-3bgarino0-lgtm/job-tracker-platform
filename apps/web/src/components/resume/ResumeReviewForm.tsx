@@ -9,8 +9,9 @@ import { ConfidenceBadge } from './ConfidenceBadge';
 import { ResumeCollectionsEditor } from './ResumeCollectionsEditor';
 
 interface ResumeReviewFormProps {
-  extractionId: string;
-  userId: string;
+  extractionId: string | null;
+  userId: string | null;
+  canApprove: boolean;
   initialData: ParsedResumeData;
   onConfirmed: () => void;
 }
@@ -96,6 +97,7 @@ function ScalarField({
 export function ResumeReviewForm({
   extractionId,
   userId,
+  canApprove,
   initialData,
   onConfirmed,
 }: ResumeReviewFormProps) {
@@ -141,6 +143,13 @@ export function ResumeReviewForm({
   }
 
   async function submitReview() {
+    if (!canApprove || !extractionId || !userId) {
+      setError(
+        'هذه معاينة فقط. الحفظ والاعتماد سيتاحان بعد ربط قاعدة البيانات وتسجيل الدخول.',
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -154,9 +163,7 @@ export function ResumeReviewForm({
         },
       );
 
-      const result = (await response.json()) as {
-        error?: string;
-      };
+      const result = (await response.json()) as { error?: string };
 
       if (!response.ok) {
         throw new Error(result.error ?? 'تعذر اعتماد البيانات.');
@@ -181,13 +188,19 @@ export function ResumeReviewForm({
           المراجعة البشرية إلزامية
         </p>
         <h2 className="text-2xl font-black text-slate-900">
-          راجع البيانات قبل اعتمادها
+          راجع البيانات المستخرجة
         </h2>
         <p className="mt-2 text-sm leading-7 text-slate-500">
           القيم الفارغة لم تُستخرج ولن يتم تعويضها ببيانات افتراضية.
-          يمكنك تعديل كل قيمة قبل حفظها.
+          يمكنك تعديل كل قيمة أثناء المعاينة.
         </p>
       </header>
+
+      {!canApprove ? (
+        <div className="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          التحليل يعمل الآن بوضع المعاينة. لم تُحفظ السيرة أو البيانات في قاعدة بيانات.
+        </div>
+      ) : null}
 
       <div className="mb-8">
         <h3 className="mb-4 text-lg font-black text-emerald-900">
@@ -200,11 +213,7 @@ export function ResumeReviewForm({
           ]>).map(([key, value]) => (
             <ScalarField
               key={key}
-              label={
-                personalLabels[
-                  key as keyof ParsedResumeData['personalInfo']
-                ]
-              }
+              label={personalLabels[key]}
               field={value}
               type={
                 key === 'email'
@@ -232,11 +241,7 @@ export function ResumeReviewForm({
           ]>).map(([key, value]) => (
             <ScalarField
               key={key}
-              label={
-                careerLabels[
-                  key as keyof ParsedResumeData['careerInfo']
-                ]
-              }
+              label={careerLabels[key]}
               field={value}
               type={
                 key === 'totalYearsExperience' ? 'number' : 'text'
@@ -270,12 +275,14 @@ export function ResumeReviewForm({
         <button
           type="button"
           onClick={submitReview}
-          disabled={isSubmitting}
-          className="rounded-xl bg-emerald-700 px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800"
+          disabled={isSubmitting || !canApprove}
+          className="rounded-xl bg-emerald-700 px-6 py-3 text-sm font-black text-white shadow-sm transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
         >
-          {isSubmitting
-            ? 'جارٍ اعتماد البيانات...'
-            : 'تأكيد واعتماد البيانات'}
+          {!canApprove
+            ? 'الحفظ يتطلب تسجيل الدخول'
+            : isSubmitting
+              ? 'جارٍ اعتماد البيانات...'
+              : 'تأكيد واعتماد البيانات'}
         </button>
       </div>
     </section>
