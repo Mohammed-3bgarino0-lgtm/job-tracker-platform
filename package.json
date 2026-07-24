@@ -1,29 +1,27 @@
 {
   "name": "qaddem-ai-monorepo",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "منصة قدّم | Qaddem AI - المساعد الذكي للبحث عن الوظائف وتعبئة الطلبات",
-  "scripts": {
-    "dev": "next dev",
-    "build": "prisma generate && next build",
-    "start": "next start",
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push"
+  "packageManager": "pnpm@11.15.1",
+  "engines": {
+    "node": ">=20.19.0"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "scripts": {
+    "dev": "pnpm --filter @qaddem/web dev",
+    "build": "pnpm db:generate && pnpm --filter @qaddem/web build",
+    "typecheck": "pnpm --filter @qaddem/shared typecheck && pnpm --filter @qaddem/web typecheck",
+    "test": "pnpm --filter @qaddem/shared test && pnpm --filter @qaddem/web test",
+    "db:generate": "prisma generate --schema prisma/schema.prisma",
+    "db:validate": "prisma validate --schema prisma/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema prisma/schema.prisma",
+    "db:push": "prisma db push --schema prisma/schema.prisma"
+  },
   "dependencies": {
-    "@prisma/client": "^5.10.0",
-    "next": "^14.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.0",
-    "@types/react": "^18.2.0",
-    "prisma": "^5.10.0",
-    "typescript": "^5.3.3"
+    "prisma": "^5.22.0",
+    "typescript": "^5.8.3"
   }
 }

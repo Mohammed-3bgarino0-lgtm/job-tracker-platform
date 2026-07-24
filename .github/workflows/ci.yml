@@ -1,0 +1,114 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+      - agent/resume-parser-review-ui
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      DATABASE_URL: postgresql://qaddem:qaddem@localhost:5432/qaddem_ci?schema=public
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.15.1
+          run_install: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Validate Prisma schema
+        run: pnpm db:validate
+
+      - name: Generate Prisma client
+        run: pnpm db:generate
+
+      - name: Typecheck
+        id: typecheck
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm typecheck > typecheck.log 2>&1
+          status=$?
+          cat typecheck.log
+          exit $status
+
+      - name: Run tests
+        id: tests
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm test > tests.log 2>&1
+          status=$?
+          cat tests.log
+          exit $status
+
+      - name: Build web application
+        id: build
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          pnpm --filter @qaddem/web build > build.log 2>&1
+          status=$?
+          cat build.log
+          exit $status
+
+      - name: Upload validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-validation-logs
+          path: |
+            typecheck.log
+            tests.log
+            build.log
+          if-no-files-found: ignore
+          retention-days: 3
+
+      - name: Enforce successful checks
+        if: always()
+        shell: bash
+        run: |
+          failed=0
+          if [[ "${{ steps.typecheck.outcome }}" == "failure" ]]; then
+            echo "Typecheck failed"
+            failed=1
+          fi
+          if [[ "${{ steps.tests.outcome }}" == "failure" ]]; then
+            echo "Tests failed"
+            failed=1
+          fi
+          if [[ "${{ steps.build.outcome }}" == "failure" ]]; then
+            echo "Build failed"
+            failed=1
+          fi
+          exit "$failed"
