@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة قدّم | Qaddem AI - المحلل العام لمصادر الوظائف v1.2</title>
-    <meta name="description" content="منصة تقنية سعودية حديثة لبناء الملف الوظيفي، تحليل أي رابط أو صفحة وظائف أو منشور، وتوليد مسودات EML والتقديم بـ HTML.">
+    <title>منصة قدّم | Qaddem AI - v1.3 المحلل الفعلي بدون بيانات وهمية</title>
+    <meta name="description" content="منصة تقنية سعودية حديثة لبناء الملف الوظيفي، تحليل الإعلانات والمنشورات الفعلية بدون بيانات وهمية، وتوليد مسودات EML.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -75,17 +75,10 @@
 
         /* Badges & Channel Tags */
         .badge { background: var(--emerald-50); color: var(--emerald-800); border: 1px solid var(--emerald-border); padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .badge-female { background: #fce7f3; color: #be185d; border: 1px solid #fbcfe8; }
-        .badge-male { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
-        .badge-both { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
-
         .tag-email { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .tag-whatsapp { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
         .tag-form { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
         .tag-link { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
-
-        .filter-btn { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--slate-200); background: white; cursor: pointer; font-weight: bold; font-size: 12px; }
-        .filter-btn.active { background: var(--emerald-800); color: white; border-color: var(--emerald-800); }
 
         /* Toast */
         .toast { position: fixed; bottom: 24px; left: 24px; background: var(--emerald-900); color: white; padding: 12px 24px; border-radius: var(--radius-md); font-weight: 700; display: none; z-index: 1000; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
@@ -105,13 +98,12 @@
                     </svg>
                 </div>
                 <div class="brand-text">
-                    <h2>قدّم | Qaddem AI <span class="badge" style="font-size:10px;">المحلل العام v1.2</span></h2>
-                    <p>المساعد الذكي لبناء الملف الوظيفي وتحليل أي موقع أو منشور | haderksa.org</p>
+                    <h2>قدّم | Qaddem AI <span class="badge" style="font-size:10px;">إصدار v1.3 الفعلي</span></h2>
+                    <p>بدون بيانات وهمية | haderksa.org</p>
                 </div>
             </div>
             <ul class="nav-links">
-                <li><a class="nav-link active" onclick="showTab('tab-universal')"><i class="fa-solid fa-wand-magic-sparkles"></i> المحلل العام لمصادر الوظائف</a></li>
-                <li><a class="nav-link" onclick="showTab('tab-home')"><i class="fa-solid fa-house"></i> البحث المباشر بالمنصات</a></li>
+                <li><a class="nav-link active" onclick="showTab('tab-parser')"><i class="fa-solid fa-wand-magic-sparkles"></i> تحليل النص والاستيراد</a></li>
                 <li><a class="nav-link" onclick="showTab('tab-kanban')"><i class="fa-solid fa-layer-group"></i> متتبع الطلبات (Kanban)</a></li>
                 <li><a class="nav-link" onclick="showTab('tab-profile')"><i class="fa-solid fa-user-gear"></i> الملف الوظيفي والسيرة</a></li>
                 <li><a class="nav-link" onclick="showTab('tab-extension')"><i class="fa-brands fa-chrome"></i> إضافة المتصفح</a></li>
@@ -121,92 +113,52 @@
 
     <main class="main-container">
 
-        <!-- TAB: UNIVERSAL JOB SOURCE ANALYZER -->
-        <div id="tab-universal">
+        <!-- TAB: ACTUAL JOB PARSER (ZERO DUMMY DATA) -->
+        <div id="tab-parser">
             <div class="hero-banner">
-                <div class="hero-title">المحلل العام لمصادر الوظائف وإعلانات التوظيف 🎯</div>
-                <div class="hero-sub">ألصق أي رابط (حساب X، بحث LinkedIn، صفحة توظيف شركة، أو منشور) أو نص الإعلان، وسيقوم النظام باستخراج الإيميلات، الأرقام، وتوليد مسودة EML وتصنيف القنوات تلقائياً.</div>
+                <div class="hero-title">محرك تحليل المنشورات الفعلي v1.3 🎯</div>
+                <div class="hero-sub">حذف كامل للبيانات البديلة أو الوهمية. تلصق النص أو تستورد JSON الإضافة، ويقوم النظام باستخراج الإيميلات والأرقام وتوليد مسودة EML المباشرة.</div>
             </div>
 
             <div class="clean-card">
                 <div class="card-title">
-                    <span><i class="fa-solid fa-globe" style="color:var(--emerald-800)"></i> حلّل أي رابط أو نص إعلان وظيفي</span>
-                    <span class="badge">عام وغير مقيد</span>
+                    <span><i class="fa-solid fa-file-lines" style="color:var(--emerald-800)"></i> تحليل نص الإعلان الفعلي أو استيراد JSON الإضافة</span>
+                    <span class="badge">تحليل بدون بيانات وهمية</span>
                 </div>
 
-                <textarea id="universal-input-text" class="form-control" style="height:120px; margin-bottom:14px;" placeholder="ألصق رابط صفحة الوظائف أو نص المنشور هنا (مثال: مطلوب مشرف إداري وتطوير عمليات بشركة سابك بالرياض hr@sabic-ksa.com / 0539491361)..."></textarea>
+                <textarea id="actual-input-text" class="form-control" style="height:120px; margin-bottom:14px;" placeholder="الصق نص المنشور أو الإعلان هنا لتحليله... (إذا لم يوجد بريد أو رقم فلن يتم اختراع بيانات غير موجودة)"></textarea>
                 
                 <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
                     <div style="display:flex; gap:10px;">
-                        <button onclick="processUniversalAnalysis()" class="btn btn-emerald"><i class="fa-solid fa-bolt"></i> تحليل المصدر واستخراج البيانات</button>
-                        <button onclick="downloadEMLDraftFile()" class="btn btn-outline"><i class="fa-solid fa-file-export"></i> تنزيل مسودة EML مع السيرة</button>
+                        <button onclick="processActualTextAnalysis()" class="btn btn-emerald"><i class="fa-solid fa-bolt"></i> تحليل النص الفعلي</button>
+                        <button onclick="document.getElementById('json-file-input').click()" class="btn btn-outline"><i class="fa-solid fa-file-import"></i> استيراد JSON الإضافة</button>
+                        <input type="file" id="json-file-input" accept=".json" style="display:none;" onchange="importExtensionJSON(event)">
                     </div>
-                    <button onclick="exportAllJobsJSON()" class="btn btn-outline" style="font-size:12px;"><i class="fa-solid fa-download"></i> تصدير البيانات (JSON)</button>
                 </div>
 
-                <!-- 5 Independent Filters -->
-                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
-                    <button id="uf-all" class="filter-btn active" onclick="filterUniversalChannel('all')">الكل</button>
-                    <button id="uf-email" class="filter-btn" onclick="filterUniversalChannel('email')">📧 البريد الإلكتروني</button>
-                    <button id="uf-whatsapp" class="filter-btn" onclick="filterUniversalChannel('whatsapp')">💬 الجوال / الواتساب</button>
-                    <button id="uf-form" class="filter-btn" onclick="filterUniversalChannel('form')">📋 النماذج</button>
-                    <button id="uf-link" class="filter-btn" onclick="filterUniversalChannel('link')">🔗 الروابط الخارجية</button>
-                </div>
-
-                <!-- Output Display Panel -->
-                <div id="universal-output-panel" style="display:none;">
+                <!-- Output Box -->
+                <div id="actual-output-panel" style="display:none;">
                     <div style="background:var(--emerald-50); border:1px solid var(--emerald-border); padding:16px; border-radius:var(--radius-lg); margin-bottom:16px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                            <h4 style="color:var(--emerald-900); font-size:15px; font-weight:800;"><i class="fa-solid fa-circle-check"></i> نتيجة تحليل المصدر المباشر:</h4>
-                            <div style="display:flex; gap:6px;">
-                                <span id="u-gender-badge" class="badge badge-both">👫 للرجال والنساء</span>
-                                <span id="u-channel-badge" class="badge tag-email">إيميل</span>
-                            </div>
-                        </div>
+                        <h4 style="color:var(--emerald-900); font-size:15px; font-weight:800; margin-bottom:10px;"><i class="fa-solid fa-circle-check"></i> نتيجة التحليل الفعلي:</h4>
                         <div class="grid-2" style="font-size:13px; gap:10px;">
-                            <div><strong>المسمى الوظيفي:</strong> <span id="u-title">مشرف خدمات إدارية وتطوير عمليات</span></div>
-                            <div><strong>الجهة المستهدفة:</strong> <span id="u-company">شركة سابك (SABIC)</span></div>
-                            <div><strong>المدينة:</strong> <span id="u-city">الرياض</span></div>
-                            <div><strong>العنوان المطلوب للرسالة:</strong> <span id="u-subject" style="color:var(--emerald-800); font-weight:bold;">مشرف إداري - الرياض</span></div>
-                            <div><strong>عناوين البريد المكتشفة:</strong> <span id="u-emails" style="font-weight:bold; color:var(--emerald-800);">hr@sabic-ksa.com</span></div>
-                            <div><strong>أرقام الجوال والواتساب:</strong> <span id="u-phones" style="font-weight:bold;">0539491361</span></div>
+                            <div><strong>المسمى الوظيفي:</strong> <span id="v-title">غير محدد</span></div>
+                            <div><strong>عناوين البريد المكتشفة:</strong> <span id="v-emails" style="font-weight:bold; color:var(--emerald-800);">لا يوجد</span></div>
+                            <div><strong>أرقام الجوال والواتساب:</strong> <span id="v-phones" style="font-weight:bold;">لا يوجد</span></div>
+                            <div><strong>رابط النموذج / التقديم:</strong> <span id="v-form">لا يوجد</span></div>
                         </div>
                     </div>
 
                     <!-- Dispatch Actions -->
                     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-                        <button id="u-btn-gmail" onclick="openGmailCompose()" class="btn btn-emerald"><i class="fa-solid fa-envelope"></i> فتح في Gmail</button>
-                        <button id="u-btn-outlook" onclick="openOutlookCompose()" class="btn btn-outline"><i class="fa-solid fa-envelope-open"></i> فتح في Outlook</button>
-                        <button id="u-btn-wa" onclick="openWhatsAppDirect()" class="btn btn-outline" style="color:#16a34a; border-color:#bbf7d0; background:#f0fdf4;"><i class="fa-brands fa-whatsapp"></i> فتح رسالة الواتساب</button>
-                        <button onclick="downloadEMLDraftFile()" class="btn btn-outline"><i class="fa-solid fa-download"></i> تنزيل مسودة EML</button>
-                    </div>
-
-                    <!-- HTML Email Preview -->
-                    <div class="clean-card" style="background:var(--slate-50);">
-                        <div class="card-title" style="font-size:14px;">معاينة نص الـ HTML التفاعلي المولد:</div>
-                        <div id="html-preview-content" style="background:white; padding:16px; border-radius:var(--radius-md); border:1px solid var(--slate-200); font-size:13px;"></div>
+                        <button id="v-btn-gmail" onclick="openActualGmail()" class="btn btn-emerald" style="display:none;"><i class="fa-solid fa-envelope"></i> فتح في Gmail</button>
+                        <button id="v-btn-wa" onclick="openActualWA()" class="btn btn-outline" style="display:none; color:#16a34a; border-color:#bbf7d0; background:#f0fdf4;"><i class="fa-brands fa-whatsapp"></i> فتح في الواتساب</button>
+                        <button id="v-btn-eml" onclick="downloadActualEML()" class="btn btn-outline" style="display:none;"><i class="fa-solid fa-download"></i> تنزيل مسودة EML مع السيرة</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TAB 2: LIVE SEARCH ENGINE -->
-        <div id="tab-home" style="display:none;">
-            <div class="clean-card">
-                <div class="card-title">
-                    <span><i class="fa-solid fa-globe" style="color:var(--emerald-800)"></i> البحث المباشر في المنصات السعودية والعالمية</span>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button onclick="openPlatformSearch('linkedin')" class="btn btn-outline"><i class="fa-brands fa-linkedin" style="color:#0a66c2"></i> LinkedIn KSA</button>
-                    <button onclick="openPlatformSearch('indeed')" class="btn btn-outline"><i class="fa-solid fa-circle-info" style="color:#2164f3"></i> Indeed KSA</button>
-                    <button onclick="openPlatformSearch('bayt')" class="btn btn-outline"><i class="fa-solid fa-building" style="color:#0072b1"></i> Bayt بيت.كوم</button>
-                    <button onclick="openPlatformSearch('tanqeeb')" class="btn btn-outline"><i class="fa-solid fa-search" style="color:#ea580c"></i> Tanqeeb تنقيب</button>
-                    <button onclick="openPlatformSearch('jadarat')" class="btn btn-outline"><i class="fa-solid fa-flag" style="color:#16a34a"></i> جدارات Jadarat</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 3: KANBAN TRACKER -->
+        <!-- TAB: KANBAN TRACKER -->
         <div id="tab-kanban" style="display:none;">
             <div class="clean-card">
                 <div class="card-title">
@@ -221,7 +173,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: UNIFIED PROFILE -->
+        <!-- TAB: PROFILE -->
         <div id="tab-profile" style="display:none;">
             <div class="clean-card">
                 <div class="card-title"><i class="fa-solid fa-user-gear" style="color:var(--emerald-800)"></i> الملف الوظيفي الموحد والتخزين المحلي</div>
@@ -240,13 +192,13 @@
             </div>
         </div>
 
-        <!-- TAB 5: CHROME EXTENSION -->
+        <!-- TAB: EXTENSION -->
         <div id="tab-extension" style="display:none;">
             <div class="clean-card">
                 <div class="card-title">
-                    <span><i class="fa-brands fa-chrome" style="color:var(--emerald-800)"></i> إضافة المتصفح Chrome Extension v1.2 الحرة</span>
+                    <span><i class="fa-brands fa-chrome" style="color:var(--emerald-800)"></i> إضافة المتصفح Chrome Extension v1.3</span>
                 </div>
-                <p style="font-size:13px;">تتيح لك الإضافة فتح وتحليل أي رابط، منشور X، صفحة توظيف، أو إعلان واستخراج البريد والأرقام وتوليد مسودة EML مباشرة.</p>
+                <p style="font-size:13px;">افتح صفحة X أو أي موقع توظيف، مرر لتحميل المنشورات، ثم اضغط <strong>«فحص الصفحة الحالية المحملة»</strong> في الإضافة لتصنيف كل بطاقة بشكل مستقل بدون بيانات بديلة وهمية.</p>
             </div>
         </div>
 
@@ -257,66 +209,91 @@
 
     <script>
         function showTab(tabId) {
-            ['tab-universal', 'tab-home', 'tab-kanban', 'tab-profile', 'tab-extension'].forEach(id => {
+            ['tab-parser', 'tab-kanban', 'tab-profile', 'tab-extension'].forEach(id => {
                 document.getElementById(id).style.display = id === tabId ? 'block' : 'none';
             });
             document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
         }
 
-        function filterUniversalChannel(channel) {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('uf-' + channel)?.classList.add('active');
-            processUniversalAnalysis();
+        function processActualTextAnalysis() {
+            const text = document.getElementById('actual-input-text').value.trim();
+            if (!text) { alert('يرجى كتابة أو لصق النص الفعلي أولاً!'); return; }
+
+            const emails = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || [];
+            const phones = text.match(/(?:05|\+9665)[0-9]{8}/g) || [];
+
+            if (emails.length === 0 && phones.length === 0) {
+                document.getElementById('v-title').innerText = 'إعلان مصور / لا توجد إيميلات أو أرقام مباشرة في النص';
+                document.getElementById('v-emails').innerText = 'لا يوجد بريد في النص الفعلي';
+                document.getElementById('v-phones').innerText = 'لا يوجد جوال في النص الفعلي';
+                document.getElementById('v-btn-gmail').style.display = 'none';
+                document.getElementById('v-btn-wa').style.display = 'none';
+                document.getElementById('v-btn-eml').style.display = 'none';
+            } else {
+                document.getElementById('v-title').innerText = 'وظيفة معلنة في النص';
+                document.getElementById('v-emails').innerText = emails.join(', ') || 'لا يوجد';
+                document.getElementById('v-phones').innerText = phones.join(', ') || 'لا يوجد';
+
+                if (emails.length > 0) {
+                    document.getElementById('v-btn-gmail').style.display = 'inline-flex';
+                    document.getElementById('v-btn-eml').style.display = 'inline-flex';
+                } else {
+                    document.getElementById('v-btn-gmail').style.display = 'none';
+                    document.getElementById('v-btn-eml').style.display = 'none';
+                }
+
+                if (phones.length > 0) {
+                    document.getElementById('v-btn-wa').style.display = 'inline-flex';
+                } else {
+                    document.getElementById('v-btn-wa').style.display = 'none';
+                }
+            }
+
+            document.getElementById('actual-output-panel').style.display = 'block';
         }
 
-        function processUniversalAnalysis() {
-            const text = document.getElementById('universal-input-text').value.trim();
-            if (!text) return;
-
-            const emails = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g) || ['hr@sabic-ksa.com'];
-            const phones = text.match(/(?:05|\+9665)[0-9]{8}/g) || ['0539491361'];
-
-            document.getElementById('u-emails').innerText = emails.join(', ');
-            document.getElementById('u-phones').innerText = phones.join(', ');
-
-            const htmlContent = `
-<div style="direction:rtl; font-family:Arial; background:#f8fafc; padding:16px; border-radius:8px; border:1px solid #cbd5e1;">
-    <div style="background:#065f46; color:white; padding:12px; font-weight:bold; border-radius:6px;">💼 طلب توظيف: مشرف خدمات إدارية وتطوير عمليات</div>
-    <p style="margin-top:12px;"><strong>السادة / فريق التوظيف والموارد البشرية المحترمين،</strong></p>
-    <p>أتقدم إليكم بطلب التقديم على الوظيفة المعلنة. أمتلك خبرة تتجاوز 8 سنوات في الإشراف وتطوير أنظمة SAP وOdoo.</p>
-    <hr>
-    <strong>محمد السكران | 0539491361 | mohammed-alsakran@hotmail.com</strong>
-</div>`;
-            document.getElementById('html-preview-content').innerHTML = htmlContent;
-            document.getElementById('universal-output-panel').style.display = 'block';
+        function importExtensionJSON(evt) {
+            const file = evt.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    alert(`✅ تم استيراد ${data.length} وظيفة مسحوبة بنجاح!`);
+                } catch(err) {
+                    alert('ملف JSON غير صالح.');
+                }
+            };
+            reader.readAsText(file);
         }
 
-        function openGmailCompose() {
-            const email = document.getElementById('u-emails').innerText.split(',')[0];
-            const subj = encodeURIComponent('طلب توظيف: مشرف إداري - الرياض - محمد السكران');
-            window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subj}`, '_blank');
+        function openActualGmail() {
+            const emailsStr = document.getElementById('v-emails').innerText;
+            const primary = emailsStr.split(',')[0].trim();
+            if (primary && primary !== 'لا يوجد') {
+                window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${primary}&su=${encodeURIComponent('طلب توظيف - محمد السكران')}`, '_blank');
+            }
         }
 
-        function openOutlookCompose() {
-            const email = document.getElementById('u-emails').innerText.split(',')[0];
-            const subj = encodeURIComponent('طلب توظيف: مشرف إداري - الرياض - محمد السكران');
-            window.open(`https://outlook.live.com/mail/0/deeplink/compose?to=${email}&subject=${subj}`, '_blank');
+        function openActualWA() {
+            const phonesStr = document.getElementById('v-phones').innerText;
+            const primary = phonesStr.split(',')[0].replace(/[^0-9]/g, '');
+            if (primary) {
+                window.open(`https://wa.me/966${primary.slice(-9)}`, '_blank');
+            }
         }
 
-        function openWhatsAppDirect() {
-            const phone = document.getElementById('u-phones').innerText.split(',')[0].replace(/[^0-9]/g, '');
-            const msg = encodeURIComponent('السلام عليكم، أنا محمد السكران أتقدم بطلب التقديم على الشاغر الوظيفي المعلن.');
-            window.open(`https://wa.me/966${phone.slice(-9)}?text=${msg}`, '_blank');
-        }
+        function downloadActualEML() {
+            const emailsStr = document.getElementById('v-emails').innerText;
+            const primary = emailsStr.split(',')[0].trim();
 
-        function downloadEMLDraftFile() {
-            const emlContent = `To: hr@sabic-ksa.com
-Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent('مشرف إداري - الرياض - محمد السكران')))}?=
+            const emlContent = `To: ${primary}
+Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent('طلب توظيف - محمد السكران')))}?=
 X-Unsent: 1
 Content-Type: text/html; charset=utf-8
 
 <div style="direction:rtl; font-family:Arial;">
-<h2>طلب توظيف: مشرف خدمات إدارية وتطوير عمليات</h2>
+<h2>طلب توظيف</h2>
 <p>السلام عليكم ورحمة الله وبركاته،،</p>
 <p>أتقدم إليكم بطلب التقديم على الوظيفة المعلنة.</p>
 </div>`;
@@ -325,22 +302,8 @@ Content-Type: text/html; charset=utf-8
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'qaddem_universal_draft.eml';
+            a.download = 'qaddem_v1.3_draft.eml';
             a.click();
-        }
-
-        function exportAllJobsJSON() {
-            const data = [{ title: 'مشرف خدمات إدارية', email: 'hr@sabic-ksa.com', phone: '0539491361', city: 'الرياض' }];
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'qaddem_universal_jobs_export.json';
-            a.click();
-        }
-
-        function openPlatformSearch(platform) {
-            window.open('https://www.linkedin.com/jobs/search/?keywords=Operations', '_blank');
         }
     </script>
 </body>
