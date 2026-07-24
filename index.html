@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة التوظيف وإدارة التقديمات | محمد السكران</title>
+    <meta name="description" content="منصة متكاملة لإدارة وتتبع التقديمات الوظيفية، البحث عن الفرص في الرياض، وتوليد الخطابات التعريفية مخصصة لمحمد السكران.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #0b0f19;
+            --bg-card: rgba(21, 30, 47, 0.75);
+            --bg-card-hover: rgba(30, 43, 67, 0.85);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-focus: #3b82f6;
+            
+            --primary: #3b82f6;
+            --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            --accent-green: #10b981;
+            --accent-green-gradient: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --text-muted: #64748b;
+
+            --radius-xl: 20px;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-sm: 6px;
+
+            --shadow-glow: 0 0 30px rgba(59, 130, 246, 0.2);
+            --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', 'Outfit', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(59, 130, 246, 0.12) 0px, transparent 40%),
+                radial-gradient(at 90% 90%, rgba(139, 92, 246, 0.12) 0px, transparent 40%),
+                radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.08) 0px, transparent 60%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 60px;
+            line-height: 1.6;
+        }
+
+        /* Top Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 28px;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .brand-logo {
+            width: 44px;
+            height: 44px;
+            background: var(--primary-gradient);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .brand-text h2 {
+            font-size: 18px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .nav-link {
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            color: var(--text-sub);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link.active {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: var(--primary);
+        }
+
+        /* Container Layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 28px auto 0;
+            padding: 0 20px;
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 32px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.08));
+            pointer-events: none;
+        }
+
+        .user-summary {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .avatar-large {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-meta h1 {
+            font-size: 24px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 6px;
+        }
+
+        .user-meta p {
+            color: var(--text-sub);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px 24px;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-card val {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary);
+            display: block;
+        }
+
+        .stat-card label {
+            font-size: 12px;
+            color: var(--text-sub);
+            font-weight: 500;
+        }
+
+        /* Grid Section */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 28px;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .stats-grid {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: var(--shadow-card);
+            transition: border-color 0.2s ease;
+        }
+
+        .card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 14px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        /* Fast Copy Items */
+        .copy-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .copy-box-info {
+            overflow: hidden;
+        }
+
+        .copy-box-info label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: block;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .copy-box-info val {
+            font-size: 13px;
+            color: var(--text-main);
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 12px;
+            border-radius: var(--radius-sm);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-green {
+            background: var(--accent-green-gradient);
+            color: white;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-green:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Search Shortcuts Grid */
+        .search-links-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 16px;
+        }
+
+        .job-link-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: all 0.25s ease;
+        }
+
+        .job-link-card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .platform-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-md);
+            background: rgba(59, 130, 246, 0.12);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .job-link-meta h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .job-link-meta p {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        /* Form Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+            background: rgba(15, 23, 42, 0.4);
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        .form-control {
+            background: rgba(11, 15, 25, 0.8);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            color: white;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Tracker Table */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            text-align: right;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-sub);
+            font-weight: 700;
+            padding: 16px 18px;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        td {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(21, 30, 47, 0.4);
+        }
+
+        tr:hover td {
+            background: rgba(30, 43, 67, 0.7);
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-applied { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-interview { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-accepted { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .badge-rejected { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        /* Output Box */
+        .output-box {
+            background: #070a12;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            color: #e2e8f0;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            margin-top: 16px;
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        /* Domain Guide Box */
+        .domain-guide {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            margin-top: 28px;
+        }
+
+        .domain-guide h3 {
+            font-size: 18px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .domain-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .step-card {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+
+        .step-card span {
+            width: 28px;
+            height: 28px;
+            background: var(--accent-purple);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .step-card h4 {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .step-card p {
+            font-size: 12px;
+            color: var(--text-sub);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: var(--accent-green-gradient);
+            color: white;
+            padding: 14px 28px;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            display: none;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-logo"><i class="fa-solid fa-briefcase"></i></div>
+                <div class="brand-text">
+                    <h2>منصة محمد السكران المهنية</h2>
+                    <p>مركز التقديمات والبحث المباشر عن الوظائف | الرياض</p>
+                </div>
+            </div>
+            <ul class="nav-links">
+                <li><a class="nav-link active" onclick="scrollToSection('search-section')"><i class="fa-solid fa-magnifying-glass"></i> البحث المباشر</a></li>
+                <li><a class="nav-link" onclick="scrollToSection('tracker-section')"><i class="fa-solid fa-list-check"></i> سجل التقديمات</a></li>
+                <li><a class="nav-link" onclick="scrollToSection('letter-section')"><i class="fa-solid fa-wand-magic-sparkles"></i> مولد الخطابات</a></li>
+                <li><a class="nav-link" onclick="scrollToSection('domain-section')"><i class="fa-solid fa-globe"></i> ربط الدومين</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-container">
+
+        <!-- Hero Banner -->
+        <section class="hero-banner">
+            <div class="user-summary">
+                <div class="avatar-large">م س</div>
+                <div class="user-meta">
+                    <h1>محمد السكران | Mohammed H. Al-Sakran</h1>
+                    <p>
+                        <span><i class="fa-solid fa-location-dot" style="color:var(--primary)"></i> الرياض، السعودية</span>
+                        <span><i class="fa-solid fa-phone" style="color:var(--accent-green)"></i> 0539491361</span>
+                        <span><i class="fa-solid fa-envelope" style="color:var(--accent-purple)"></i> mohammed-alsakran@hotmail.com</span>
+                    </p>
+                </div>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <val id="stat-total">0</val>
+                    <label>إجمالي التقديمات</label>
+                </div>
+                <div class="stat-card">
+                    <val id="stat-interviews" style="color:var(--accent-amber)">0</val>
+                    <label>المقابلات الشخصية</label>
+                </div>
+                <div class="stat-card">
+                    <val id="stat-active" style="color:var(--accent-green)">0</val>
+                    <label>الطلبات النشطة</label>
+                </div>
+            </div>
+        </section>
+
+        <div class="content-grid">
+
+            <!-- Sidebar: Quick Copy Data & Resume Hub -->
+            <aside>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-bolt"></i> التقديم السريع (Fast Copy)</div>
+                    </div>
+
+                    <div class="copy-box">
+                        <div class="copy-box-info">
+                            <label>الاسم الكامل بالإنجليزية</label>
+                            <val>Mohammed H. Al-Sakran</val>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="copyVal('Mohammed H. Al-Sakran')"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+
+                    <div class="copy-box">
+                        <div class="copy-box-info">
+                            <label>رقم الجوال</label>
+                            <val>0539491361</val>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="copyVal('0539491361')"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+
+                    <div class="copy-box">
+                        <div class="copy-box-info">
+                            <label>البريد الإلكتروني</label>
+                            <val>mohammed-alsakran@hotmail.com</val>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="copyVal('mohammed-alsakran@hotmail.com')"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+
+                    <div class="copy-box">
+                        <div class="copy-box-info">
+                            <label>حساب LinkedIn</label>
+                            <val>linkedin.com/in/mohammed-h-al-sakran</val>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="copyVal('https://www.linkedin.com/in/mohammed-h-al-sakran/')"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+
+                    <div class="copy-box">
+                        <div class="copy-box-info">
+                            <label>الملخص المهني (Professional Summary)</label>
+                            <val>Results-driven operations & admin professional...</val>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="copyVal(`Results-driven operations and administration professional with extensive experience across retail, hospitality, HR, logistics, and business operations. Proven track record in customer service, process improvement, team leadership, and ERP systems. Adept at developing SOPs, optimizing supply chains, and driving operational excellence to support organizational growth and profitability.`)"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+
+                    <div class="copy-box">
+                        <div class="copy-box-info">
+                            <label>المهارات الأساسية (Competencies)</label>
+                            <val>Operations Management, Logistics, HR, SAP, Odoo</val>
+                        </div>
+                        <button class="btn btn-sm btn-outline" onclick="copyVal('Operations Management, Logistics & Supply Chain, Project Management, Budget Planning, Process Improvement, HR & Administration, Customer Service, Business Development, SAP, Odoo ERP')"><i class="fa-regular fa-copy"></i></button>
+                    </div>
+                </div>
+
+                <!-- Latest Experience -->
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-history"></i> أبرز الخبرات الموثقة</div>
+                    </div>
+                    <div style="font-size: 13px; color: var(--text-sub); display: flex; flex-direction: column; gap: 14px;">
+                        <div>
+                            <strong style="color: white; display:block;">مشرف إداري ومنسق أول (AACE)</strong>
+                            <span style="font-size: 11px; color: var(--text-muted);">2021 – 2023 | خفض التكاليف اللوجستية 60%</span>
+                        </div>
+                        <div>
+                            <strong style="color: white; display:block;">مدير نادٍ رياضي (Body Masters)</strong>
+                            <span style="font-size: 11px; color: var(--text-muted);">2020 – 2021 | زيادة كفاءة التشغيل ورضا العملاء</span>
+                        </div>
+                        <div>
+                            <strong style="color: white; display:block;">مدير معرض (Max - Landmark Group)</strong>
+                            <span style="font-size: 11px; color: var(--text-muted);">2019 – 2020 | تحقيق 120% من مبيعات الميزانية</span>
+                        </div>
+                        <div>
+                            <strong style="color: white; display:block;">مسؤول موارد بشرية (Park Inn Radisson)</strong>
+                            <span style="font-size: 11px; color: var(--text-muted);">2018 – 2019 | جائزة الموظف الأفضل</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Column: Direct Search, Tracker, Cover Letter, Domain -->
+            <div>
+
+                <!-- 1. Direct Search Section -->
+                <section id="search-section" class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-magnifying-glass-chart"></i> محرك البحث المباشر عن الوظائف في الرياض</div>
+                        <span style="font-size: 12px; color: var(--accent-green);"><i class="fa-solid fa-circle"></i> فرز محدد لخبرتك</span>
+                    </div>
+
+                    <div class="search-links-grid">
+                        <a href="https://www.linkedin.com/jobs/search/?keywords=Senior%20Admin%20Coordinator&location=Riyadh%2C%20Saudi%20Arabia" target="_blank" class="job-link-card">
+                            <div class="platform-icon"><i class="fa-brands fa-linkedin"></i></div>
+                            <div class="job-link-meta">
+                                <h4>مشرف إداري / Admin Coord</h4>
+                                <p>وظائف LinkedIn بالرياض</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.linkedin.com/jobs/search/?keywords=Operations%20Manager&location=Riyadh%2C%20Saudi%20Arabia" target="_blank" class="job-link-card">
+                            <div class="platform-icon"><i class="fa-brands fa-linkedin"></i></div>
+                            <div class="job-link-meta">
+                                <h4>مدير عمليات / Operations</h4>
+                                <p>وظائف LinkedIn بالرياض</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.bayt.com/ar/saudi-arabia/jobs/administrative-jobs-in-riyadh/" target="_blank" class="job-link-card">
+                            <div class="platform-icon"><i class="fa-solid fa-briefcase"></i></div>
+                            <div class="job-link-meta">
+                                <h4>الوظائف الإدارية بالرياض</h4>
+                                <p>منصة بيت.كوم Bayt</p>
+                            </div>
+                        </a>
+
+                        <a href="https://saudi.tanqeeb.com/ar/s/%D9%88%D8%B8%D8%A7%D8%A6%D9%81/%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6" target="_blank" class="job-link-card">
+                            <div class="platform-icon"><i class="fa-solid fa-building"></i></div>
+                            <div class="job-link-meta">
+                                <h4>تصفح كافة وظائف الرياض</h4>
+                                <p>منصة تنقيب Tanqeeb</p>
+                            </div>
+                        </a>
+
+                        <a href="https://sa.indeed.com/jobs?q=%D9%85%D8%B4%D8%B1%D9%81+%D8%A5%D8%AF%D8%A7%D8%B1%D9%8A&l=%D8%A7%D9%84%D8%B1%D9%8A%D8%A7%D8%B6" target="_blank" class="job-link-card">
+                            <div class="platform-icon"><i class="fa-solid fa-globe"></i></div>
+                            <div class="job-link-meta">
+                                <h4>إنديد بالرياض (Indeed)</h4>
+                                <p>وظائف الإدارة والعمليات</p>
+                            </div>
+                        </a>
+
+                        <a href="https://sabbar.com/jobs" target="_blank" class="job-link-card">
+                            <div class="platform-icon"><i class="fa-solid fa-user-check"></i></div>
+                            <div class="job-link-meta">
+                                <h4>منصة صبّار Sabbar</h4>
+                                <p>وظائف الإشراف والإدارة</p>
+                            </div>
+                        </a>
+                    </div>
+                </section>
+
+                <!-- 2. Tracker Section -->
+                <section id="tracker-section" class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-list-check"></i> سجل متابعة التقديمات (Applications Log)</div>
+                        <button class="btn btn-sm btn-outline" onclick="exportData()"><i class="fa-solid fa-download"></i> تصدير البيانات</button>
+                    </div>
+
+                    <!-- Add Application Form -->
+                    <form onsubmit="addApplication(event)" class="form-grid">
+                        <div class="form-group">
+                            <label>اسم الشركة</label>
+                            <input type="text" id="app-company" class="form-control" required placeholder="مثال: شركة سابك / Almarai">
+                        </div>
+                        <div class="form-group">
+                            <label>المسمى الوظيفي</label>
+                            <input type="text" id="app-role" class="form-control" required placeholder="مثال: مشرف إداري / Operations Lead">
+                        </div>
+                        <div class="form-group">
+                            <label>تاريخ التقديم</label>
+                            <input type="date" id="app-date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>حالة الطلب</label>
+                            <select id="app-status" class="form-control">
+                                <option value="applied">تم التقديم</option>
+                                <option value="interview">مقابلة شخصية</option>
+                                <option value="accepted">تم القبول</option>
+                                <option value="rejected">مرفوض / اعتذار</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn btn-green"><i class="fa-solid fa-plus"></i> إضافة التقديم إلى السجل</button>
+                        </div>
+                    </form>
+
+                    <!-- Applications Table -->
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>الشركة</th>
+                                    <th>الوظيفة</th>
+                                    <th>التاريخ</th>
+                                    <th>الحالة</th>
+                                    <th>إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="app-table-body">
+                                <!-- Dynamic JS Output -->
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 3. AI Cover Letter Generator Section -->
+                <section id="letter-section" class="card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa-solid fa-wand-magic-sparkles"></i> صانع الخطابات التعريفية ورسائل الإيميل</div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div class="form-group">
+                            <label>المسمى الوظيفي</label>
+                            <input type="text" id="cl-job-title" class="form-control" placeholder="مثال: مشرف إداري / HR Executive">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم الشركة</label>
+                            <input type="text" id="cl-company-name" class="form-control" placeholder="مثال: شركة المراعي / SABIC">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-bottom: 16px;">
+                        <button class="btn btn-primary" onclick="generateLetter('ar')"><i class="fa-solid fa-language"></i> إنشاء باللغة العربية</button>
+                        <button class="btn btn-outline" onclick="generateLetter('en')"><i class="fa-solid fa-globe"></i> English Letter</button>
+                    </div>
+
+                    <div id="cl-output-box" class="output-box" style="display:none;"></div>
+                    <button id="cl-copy-btn" class="btn btn-green" style="display:none; margin-top: 14px; width: 100%; justify-content: center;" onclick="copyCoverLetter()"><i class="fa-regular fa-copy"></i> نسخ الخطاب التعريفي الآن</button>
+                </section>
+
+                <!-- 4. Domain & Hosting Guide Section -->
+                <section id="domain-section" class="domain-guide">
+                    <h3><i class="fa-solid fa-globe"></i> دليل ربط المنصة بدومين خاص والاستضافة المجانية</h3>
+                    <p style="font-size: 13px; color: var(--text-sub);">يمكنك رفـع هذه المنصة المخصصة لك مجاناً على الإنترنت فوراً وربطها بدومين شخصي مثل (alsakran.sa أو mohammed-alsakran.com) عبر المزايا التالية:</p>
+
+                    <div class="domain-steps">
+                        <div class="step-card">
+                            <span>1</span>
+                            <h4>رفع الموقع مجاناً</h4>
+                            <p>قم بإنشاء حساب مجاني على <strong>Vercel</strong> أو <strong>Netlify</strong> واسحب هذا المجلد أو ملف <code>index.html</code> إليه ليكون موقعك حياً على شبكة الإنترنت بثوانٍ.</p>
+                        </div>
+
+                        <div class="step-card">
+                            <span>2</span>
+                            <h4>شراء الدومين</h4>
+                            <p>احجز دومينك المفضل عبر موقع <strong>Namecheap</strong> أو <strong>GoDaddy</strong> أو <strong>SaudiNIC (.sa)</strong>.</p>
+                        </div>
+
+                        <div class="step-card">
+                            <span>3</span>
+                            <h4>ربط الـ DNS</h4>
+                            <p>في لوحة التحكم بالدومين، قم بتوجيه سجلات الـ DNS (A Record / CNAME) نحو Vercel أو Netlify وسيعمل موقعك فوراً مع شهادة أمان SSL مجانية.</p>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">تم النسخ بنجاح!</div>
+
+    <script>
+        // Default today's date
+        document.getElementById('app-date').valueAsDate = new Date();
+
+        // Local Storage State
+        let apps = JSON.parse(localStorage.getItem('sakran_job_apps') || '[]');
+
+        function updateStats() {
+            document.getElementById('stat-total').innerText = apps.length;
+            document.getElementById('stat-interviews').innerText = apps.filter(a => a.status === 'interview').length;
+            document.getElementById('stat-active').innerText = apps.filter(a => a.status === 'applied' || a.status === 'interview').length;
+        }
+
+        function renderApps() {
+            const tbody = document.getElementById('app-table-body');
+            tbody.innerHTML = '';
+
+            if (apps.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-muted);">لا توجد تقديمات مسجلة حتى الآن. استخدم النموذج أعلاه لتدوين أول تقديم لك!</td></tr>`;
+                updateStats();
+                return;
+            }
+
+            apps.forEach((item, idx) => {
+                let badgeStyle = 'badge-applied';
+                let label = 'تم التقديم';
+                if (item.status === 'interview') { badgeStyle = 'badge-interview'; label = 'مقابلة شخصية'; }
+                if (item.status === 'accepted') { badgeStyle = 'badge-accepted'; label = 'تم القبول'; }
+                if (item.status === 'rejected') { badgeStyle = 'badge-rejected'; label = 'مرفوض/اعتذار'; }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.company}</strong></td>
+                    <td>${item.role}</td>
+                    <td>${item.date}</td>
+                    <td><span class="badge ${badgeStyle}">${label}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" style="color:#ef4444; border-color:rgba(239, 68, 68, 0.3);" onclick="deleteApp(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateStats();
+        }
+
+        function addApplication(e) {
+            e.preventDefault();
+            const company = document.getElementById('app-company').value.trim();
+            const role = document.getElementById('app-role').value.trim();
+            const date = document.getElementById('app-date').value;
+            const status = document.getElementById('app-status').value;
+
+            apps.unshift({ company, role, date, status });
+            localStorage.setItem('sakran_job_apps', JSON.stringify(apps));
+
+            document.getElementById('app-company').value = '';
+            document.getElementById('app-role').value = '';
+
+            renderApps();
+            showToast('تم حفظ التقديم بنجاح في اللوحة!');
+        }
+
+        function deleteApp(idx) {
+            if (confirm('هل أنت تأكد من إزالة هذا التقديم؟')) {
+                apps.splice(idx, 1);
+                localStorage.setItem('sakran_job_apps', JSON.stringify(apps));
+                renderApps();
+                showToast('تم الحذف.');
+            }
+        }
+
+        function copyVal(val) {
+            navigator.clipboard.writeText(val);
+            showToast('تم النسخ للحافظة!');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
+
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateLetter(lang) {
+            const job = document.getElementById('cl-job-title').value.trim() || 'المشرف الإداري / Senior Admin Lead';
+            const company = document.getElementById('cl-company-name').value.trim() || 'الشركة الموقرة';
+            const out = document.getElementById('cl-output-box');
+            const copyBtn = document.getElementById('cl-copy-btn');
+
+            let text = '';
+            if (lang === 'ar') {
+                text = `السادة / فريق التوظيف والموارد البشرية في ${company} المحترمين،
+
+السلام عليكم ورحمة الله وبركاته،،
+
+أود التعبير عن رغبتي الشديدة في الانضمام إلى فريقكم عبر التقديم على شاغر (${job}). 
+
+بامتلاكي خبرة تزيد عن 8 سنوات في مجالات الإشراف الإداري، إدارة العمليات، وإدارة الموارد البشرية والخدمات اللوجستية في كبرى المنشآت بالسعودية (مثل AACE وBody Masters وLandmark Group)، تمكنت بحمد الله من تطوير خطط تشغيلية نجحت في تقليل التكاليف اللوجستية بنسبة 60% وتحقيق 120% من مستهدفات المبيعات وإشراك فريق العمل بكفاءة عالية.
+
+أثق تماماً بأن مؤهلاتي وقدرتي على قيادة فرق العمل وتطبيق أنظمة ERP (مثل SAP وOdoo) ستشكل إضافة ملموسة لمؤسستكم.
+
+أتطلع لإتاحة الفرصة لإجراء مقابلة شخصية لمناقشة التفاصيل.
+
+وتقبلوا فائق التحية والتقدير،،
+
+محمد السكران
+الرياض، المملكة العربية السعودية
+جوال: 0539491361
+بريد: mohammed-alsakran@hotmail.com
+LinkedIn: https://www.linkedin.com/in/mohammed-h-al-sakran/`;
+            } else {
+                text = `Dear Hiring Manager at ${company},
+
+I am writing to formally apply for the (${job}) position. With over 8 years of solid experience in operations management, administrative supervision, logistics coordination, and HR across prominent organizations in Saudi Arabia, I am confident in my ability to drive operational excellence in your team.
+
+Throughout my professional journey, I have demonstrated a strong track record—including reducing logistics operational costs by 60%, deploying SAP employee systems for 2,000+ staff, and achieving 120% of sales targets.
+
+My expertise in standard operating procedures (SOPs), SAP/Odoo ERP systems, and team leadership enables me to deliver immediate value to ${company}.
+
+I look forward to discussing my application with you in an interview.
+
+Best regards,
+
+Mohammed H. Al-Sakran
+Riyadh, Saudi Arabia | +966 539491361
+Email: mohammed-alsakran@hotmail.com
+LinkedIn: https://www.linkedin.com/in/mohammed-h-al-sakran/`;
+            }
+
+            out.innerText = text;
+            out.style.display = 'block';
+            copyBtn.style.display = 'inline-flex';
+        }
+
+        function copyCoverLetter() {
+            const t = document.getElementById('cl-output-box').innerText;
+            navigator.clipboard.writeText(t);
+            showToast('تم نسخ الخطاب التعريفي بنجاح!');
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(apps, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "mohammed_alsakran_job_applications.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Init
+        renderApps();
+    </script>
+</body>
+</html>
