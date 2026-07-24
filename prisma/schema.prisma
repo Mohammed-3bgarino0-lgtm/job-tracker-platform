@@ -211,19 +211,22 @@ model JobSource {
 }
 
 model Job {
-  id           String          @id @default(cuid())
-  sourceId     String?
-  source       JobSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
-  title        String
-  company      String?
-  city         String?
-  description  String?
-  originalUrl  String          @unique
-  genderTarget GenderTarget    @default(BOTH)
-  createdAt    DateTime        @default(now())
-  contacts     JobContact[]
-  matches      JobMatch[]
-  applications Application[]
+  id                 String          @id @default(cuid())
+  sourceId           String?
+  source             JobSource?      @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  title              String
+  company            String?
+  city               String?
+  description        String?
+  originalUrl        String          @unique
+  genderTarget       GenderTarget?
+  genderConfidence   Float?
+  genderEvidence     String[]        @default([])
+  genderClassifiedAt DateTime?
+  createdAt          DateTime        @default(now())
+  contacts           JobContact[]
+  matches            JobMatch[]
+  applications       Application[]
 }
 
 model JobContact {
