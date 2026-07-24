@@ -1,0 +1,281 @@
+// Prisma Schema for Qaddem AI (Enterprise Monorepo SaaS Platform)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GenderTarget {
+  FEMALE
+  MALE
+  BOTH
+}
+
+enum ApplicationStatus {
+  SUGGESTED
+  SAVED
+  READY
+  NEEDS_REVIEW
+  APPLIED
+  UNDER_REVIEW
+  TEST
+  INTERVIEW
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum ContactType {
+  EMAIL
+  WHATSAPP
+  PHONE
+  GOOGLE_FORM
+  APPLICATION_LINK
+}
+
+model User {
+  id            String          @id @default(cuid())
+  email         String          @unique
+  name          String?
+  phone         String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  profile       UserProfile?
+  careerProfile CareerProfile?
+  resumes       Resume[]
+  applications  Application[]
+  approvedAnswers ApprovedAnswer[]
+  devices       BrowserDevice[]
+  auditLogs     AuditLog[]
+  emailAccounts EmailAccount[]
+}
+
+model UserProfile {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nationalId   String?
+  nationality  String?
+  gender       String?
+  city         String?
+  address      String?
+  linkedinUrl  String?
+  githubUrl    String?
+}
+
+model CareerProfile {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline     String
+  summary      String?
+  targetTitle  String
+  experiences  Experience[]
+  educations   Education[]
+  skills       Skill[]
+  certs        Certification[]
+  languages    Language[]
+  preferences  JobPreference?
+}
+
+model Resume {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  mimeType     String
+  isPrimary    Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  extractions  ResumeExtraction[]
+  versions     ResumeVersion[]
+}
+
+model ResumeVersion {
+  id           String   @id @default(cuid())
+  resumeId     String
+  resume       Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  versionNum   Int
+  changesText  String?
+  createdAt    DateTime @default(now())
+}
+
+model ResumeExtraction {
+  id              String   @id @default(cuid())
+  resumeId        String
+  resume          Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  fieldName       String
+  fieldValue      String
+  confidenceScore Float
+  snippetSource   String
+  isConfirmed     Boolean  @default(false)
+}
+
+model Experience {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  company         String
+  role            String
+  city            String?
+  startDate       DateTime
+  endDate         DateTime?
+  isCurrent       Boolean       @default(false)
+  description     String?
+}
+
+model Education {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  institution     String
+  degree          String
+  fieldOfStudy    String
+  graduationYear  Int
+}
+
+model Skill {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  name            String
+  level           String?
+}
+
+model Certification {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  name            String
+  issuer          String
+  issueDate       DateTime?
+}
+
+model Language {
+  id              String        @id @default(cuid())
+  careerProfileId String
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  name            String
+  proficiency     String
+}
+
+model JobPreference {
+  id              String        @id @default(cuid())
+  careerProfileId String        @unique
+  careerProfile   CareerProfile @relation(fields: [careerProfileId], references: [id], onDelete: Cascade)
+  expectedSalary  Int?
+  desiredCity     String?
+  workType        String?
+}
+
+model JobSource {
+  id           String   @id @default(cuid())
+  name         String
+  domain       String
+  jobs         Job[]
+}
+
+model Job {
+  id           String       @id @default(cuid())
+  sourceId     String?
+  source       JobSource?   @relation(fields: [sourceId], references: [id])
+  title        String
+  company      String
+  city         String?
+  description  String?
+  originalUrl  String       @unique
+  genderTarget GenderTarget @default(BOTH)
+  createdAt    DateTime     @default(now())
+  contacts     JobContact[]
+  matches      JobMatch[]
+  applications Application[]
+}
+
+model JobContact {
+  id           String      @id @default(cuid())
+  jobId        String
+  job          Job         @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  type         ContactType
+  value        String
+}
+
+model JobMatch {
+  id           String   @id @default(cuid())
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  matchScore   Float
+  matchedSkills String[]
+  missingSkills String[]
+}
+
+model Application {
+  id           String            @id @default(cuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobId        String
+  job          Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status       ApplicationStatus @default(SUGGESTED)
+  appliedAt    DateTime?
+  notes        String?
+  events       ApplicationEvent[]
+}
+
+model ApplicationEvent {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  status        ApplicationStatus
+  note          String?
+  createdAt     DateTime    @default(now())
+}
+
+model ApprovedAnswer {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  question     String
+  answer       String
+}
+
+model EmailAccount {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email        String
+  provider     String
+  outbound     OutboundEmail[]
+}
+
+model OutboundEmail {
+  id             String       @id @default(cuid())
+  emailAccountId String
+  emailAccount   EmailAccount @relation(fields: [emailAccountId], references: [id], onDelete: Cascade)
+  recipientEmail String
+  subject        String
+  bodyHtml       String
+  sentAt         DateTime     @default(now())
+}
+
+model BrowserDevice {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceName   String
+  lastSyncAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id])
+  action       String
+  details      String
+  ipAddress    String?
+  createdAt    DateTime @default(now())
+}
