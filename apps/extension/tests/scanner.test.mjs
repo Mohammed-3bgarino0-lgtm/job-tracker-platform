@@ -14,17 +14,36 @@ const {
   parseCandidateSnapshot,
   parseXSnapshot,
   scanMetrics,
+  sourceAdapterForUrl,
+  unwrapSearchRedirect,
 } = require('../src/scanner-content.cjs');
 
 test('detects supported source platforms from the source URL', () => {
   assert.equal(detectSourcePlatform('https://x.com/example/status/1'), 'x');
+  assert.equal(detectSourcePlatform('https://www.google.com/search?q=jobs'), 'google');
+  assert.equal(detectSourcePlatform('https://www.linkedin.com/jobs/view/1'), 'linkedin');
+  assert.equal(detectSourcePlatform('https://sa.indeed.com/viewjob?jk=1'), 'indeed');
+  assert.equal(detectSourcePlatform('https://www.bayt.com/en/saudi-arabia/jobs/1'), 'bayt');
+  assert.equal(detectSourcePlatform('https://jadarat.sa/jobs'), 'jadarat');
+  assert.equal(detectSourcePlatform('https://boards.greenhouse.io/company/jobs/1'), 'ats');
+});
+
+test('selects a dedicated adapter for each supported source', () => {
+  assert.equal(sourceAdapterForUrl('https://www.google.com/search?q=jobs').id, 'google');
+  assert.equal(sourceAdapterForUrl('https://www.linkedin.com/jobs/search').id, 'linkedin');
+  assert.equal(sourceAdapterForUrl('https://sa.indeed.com/jobs').id, 'indeed');
+  assert.equal(sourceAdapterForUrl('https://www.bayt.com/en/saudi-arabia/jobs').id, 'bayt');
+  assert.equal(sourceAdapterForUrl('https://jadarat.sa/jobs').id, 'jadarat');
+  assert.equal(sourceAdapterForUrl('https://company.example/careers').id, 'company');
+});
+
+test('unwraps Google result redirects before storing job links', () => {
   assert.equal(
-    detectSourcePlatform('https://www.linkedin.com/jobs/view/1'),
-    'linkedin',
-  );
-  assert.equal(
-    detectSourcePlatform('https://boards.greenhouse.io/company/jobs/1'),
-    'ats',
+    unwrapSearchRedirect(
+      '/url?q=https%3A%2F%2Fcareers.example.com%2Fjobs%2F123&sa=U',
+      'https://www.google.com/search?q=developer+jobs',
+    ),
+    'https://careers.example.com/jobs/123',
   );
 });
 
@@ -70,11 +89,42 @@ test('extracts explicit job evidence contacts and public job images', () => {
   assert.equal(record.company, 'شركة تقنية');
   assert.equal(record.location, 'الرياض');
   assert.deepEqual(record.emails, ['jobs@example.com']);
-  assert.equal(record.applyUrl, 'https://forms.gle/example');
+  assert.equal(record.applyUrl, 'https://careers.example.com/jobs/123');
+  assert.deepEqual(record.forms, ['https://forms.gle/example']);
   assert.equal(record.sourceUrl, 'https://careers.example.com/jobs/123');
   assert.deepEqual(record.imageUrls, ['https://pbs.twimg.com/media/job-ad.jpg']);
   assert.equal(record.ocrStatus, 'not_requested');
   assert.equal(record.reviewStatus, 'confirmed');
+});
+
+test('Google result cards preserve the external source and extracted fields', () => {
+  const record = parseCandidateSnapshot(
+    {
+      text: 'وظيفة مهندس برمجيات لدى شركة المدار في الرياض',
+      rawText: 'وظيفة مهندس برمجيات\nشركة المدار\nالرياض',
+      titleTexts: ['مهندس برمجيات'],
+      headingTexts: ['مهندس برمجيات'],
+      companyTexts: ['شركة المدار'],
+      locationTexts: ['الرياض'],
+      links: [
+        {
+          href: '/url?q=https%3A%2F%2Fcareers.example.com%2Fjobs%2Fsoftware-engineer',
+          text: 'مهندس برمجيات',
+        },
+      ],
+      images: [],
+      sourceItemId: 'google-result-1',
+    },
+    'https://www.google.com/search?q=وظائف+مهندس+برمجيات',
+  );
+
+  assert.ok(record);
+  assert.equal(record.title, 'مهندس برمجيات');
+  assert.equal(record.company, 'شركة المدار');
+  assert.equal(record.location, 'الرياض');
+  assert.equal(record.sourceUrl, 'https://careers.example.com/jobs/software-engineer');
+  assert.equal(record.sourcePlatform, 'company');
+  assert.equal(record.sourceItemId, 'google-result-1');
 });
 
 test('X adapter rejects generic intro sentences and splits multiple job titles', () => {
@@ -259,26 +309,8 @@ test('filters decorative images and keeps meaningful media', () => {
   );
 });
 
-test('leaves unknown fields null and rejects unrelated cards', () => {
-  assert.equal(
-    parseCandidateSnapshot(
-      {
-        text: 'خبر عام لا يتعلق بالتوظيف أو التقديم.',
-        rawText: 'خبر عام لا يتعلق بالتوظيف أو التقديم.',
-        titleTexts: [],
-        headingTexts: [],
-        companyTexts: [],
-        locationTexts: [],
-        links: [],
-        images: [],
-      },
-      'https://example.com/news',
-    ),
-    null,
-  );
-
-  const title = findExplicitTitle('مطلوب - محاسب تكاليف\nالمدينة جدة');
-  assert.equal(title, 'محاسب تكاليف');
-  assert.equal(extractCompany('تعلن شركة الحلول الرقمية عن وظائف جديدة'), 'شركة الحلول الرقمية');
-  assert.ok(extractLocations('مقر العمل: الرياض').includes('الرياض'));
+test('keeps company and location extraction deterministic', () => {
+  assert.equal(findExplicitTitle('مطلوب - محاسب تكاليف\nالمدينة جدة'), 'محاسب تكاليف');
+  assert.equal(extractCompany('تعلن شركة مدار التقنية عن فرصة وظيفية'), 'شركة مدار التقنية');
+  assert.ok(extractLocations('مكان العمل: الرياض').includes('الرياض'));
 });

@@ -1,6 +1,6 @@
 export const CONTRACT_DATA = Object.freeze({
   protocol: 'qaddem.bridge.v1',
-  extensionVersion: '1.6.0',
+  extensionVersion: '1.7.0',
   primaryWebOrigin: 'https://qaddemweb-production.up.railway.app',
   messageTypes: Object.freeze({
     ready: 'QADDEM_BRIDGE_READY',
@@ -20,7 +20,7 @@ export const CONTRACT_DATA = Object.freeze({
     deep: 24,
   }),
   limits: Object.freeze({
-    maxJobsPerScan: 250,
+    maxJobsPerScan: 400,
     maxImagesPerJob: 4,
     maxOcrJobsPerRequest: 12,
   }),
