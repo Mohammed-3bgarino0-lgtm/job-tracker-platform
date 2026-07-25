@@ -6,6 +6,7 @@ const require = createRequire(import.meta.url);
 const {
   detectSourcePlatform,
   findExplicitTitle,
+  meaningfulImageUrl,
   parseCandidateSnapshot,
 } = require('../src/scanner-content.cjs');
 
@@ -21,7 +22,7 @@ test('detects supported source platforms from the source URL', () => {
   );
 });
 
-test('extracts explicit job evidence and confirmed contact methods', () => {
+test('extracts explicit job evidence contacts and public job images', () => {
   const record = parseCandidateSnapshot(
     {
       text: `فرصة وظيفية\nالمسمى الوظيفي: مطور تطبيقات Android\nالموقع: الرياض\nللتقديم jobs@example.com`,
@@ -40,6 +41,20 @@ test('extracts explicit job evidence and confirmed contact methods', () => {
           text: 'التقديم الآن',
         },
       ],
+      images: [
+        {
+          src: 'https://pbs.twimg.com/media/job-ad.jpg',
+          alt: 'إعلان وظيفة',
+          width: 800,
+          height: 600,
+        },
+        {
+          src: 'https://pbs.twimg.com/profile_images/avatar.jpg',
+          alt: 'avatar',
+          width: 48,
+          height: 48,
+        },
+      ],
     },
     'https://careers.example.com/jobs',
   );
@@ -51,6 +66,35 @@ test('extracts explicit job evidence and confirmed contact methods', () => {
   assert.deepEqual(record.emails, ['jobs@example.com']);
   assert.equal(record.applyUrl, 'https://forms.gle/example');
   assert.equal(record.sourceUrl, 'https://careers.example.com/jobs/123');
+  assert.deepEqual(record.imageUrls, ['https://pbs.twimg.com/media/job-ad.jpg']);
+  assert.equal(record.ocrStatus, 'not_requested');
+});
+
+test('filters decorative images and keeps meaningful media', () => {
+  assert.equal(
+    meaningfulImageUrl(
+      {
+        src: 'https://example.com/icons/logo.png',
+        alt: 'logo',
+        width: 40,
+        height: 40,
+      },
+      'https://example.com/jobs',
+    ),
+    null,
+  );
+  assert.equal(
+    meaningfulImageUrl(
+      {
+        src: 'https://pbs.twimg.com/media/abc.jpg',
+        alt: '',
+        width: 0,
+        height: 0,
+      },
+      'https://x.com/jobs/status/1',
+    ),
+    'https://pbs.twimg.com/media/abc.jpg',
+  );
 });
 
 test('leaves unknown fields null and rejects unrelated cards', () => {
@@ -64,6 +108,7 @@ test('leaves unknown fields null and rejects unrelated cards', () => {
         companyTexts: [],
         locationTexts: [],
         links: [],
+        images: [],
       },
       'https://example.com/news',
     ),

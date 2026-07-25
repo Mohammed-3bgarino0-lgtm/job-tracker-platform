@@ -26,15 +26,27 @@
       <section class="card">
         <span class="badge">فحص يدوي</span>
         <h2>فحص الصفحة الحالية</h2>
-        <p>اضغط أثناء فتح صفحة وظيفة أو نتائج بحث. لا يتم إرسال طلب توظيف.</p>
+        <p>يفحص النصوص والروابط والصور العامة الموجودة داخل البطاقات الظاهرة. لا يتم إرسال طلب توظيف.</p>
         <button id="scan-current-button" type="button" class="secondary">
           فحص الصفحة الحالية
         </button>
       </section>
 
       <section id="last-scan-card" class="card hidden">
-        <span class="badge success">آخر نتيجة</span>
+        <div class="card-heading">
+          <span class="badge success">آخر فحص</span>
+          <button id="clear-button" type="button" class="text-button">حذف</button>
+        </div>
+        <h2>النتائج المستخرجة</h2>
         <p id="last-scan-summary"></p>
+        <div id="scan-metrics" class="metrics"></div>
+        <div id="results-list" class="results-list"></div>
+        <div class="action-grid">
+          <button id="ocr-button" type="button">تحليل الصور OCR</button>
+          <button id="open-site-button" type="button" class="secondary">إرسال إلى موقع قدّم</button>
+          <button id="export-button" type="button" class="outline">تصدير Excel</button>
+        </div>
+        <p class="privacy-note">تحليل الصور لا يبدأ إلا بعد الضغط على الزر، ويرسل روابط الصور العامة فقط إلى خادم قدّم.</p>
       </section>
 
       <p id="status" role="status">الإضافة جاهزة.</p>

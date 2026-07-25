@@ -3,6 +3,7 @@ import {
   classifyJobGender,
 } from '@qaddem/shared';
 import { z } from 'zod';
+import type { SafeInlineImage } from './safe-image-fetch';
 
 export type JobGenderTarget =
   | 'FEMALE'
@@ -26,6 +27,10 @@ export interface GeminiJobAnalysis {
   warnings: string[];
 }
 
+export interface GeminiImageJobAnalysis extends GeminiJobAnalysis {
+  extractedText: string | null;
+}
+
 export interface GeminiCoverLetterRequest {
   candidateName: string;
   candidateEmail?: string;
@@ -47,7 +52,12 @@ const GeminiJobFieldsSchema = z.object({
   summaryAr: z.string(),
 });
 
+const GeminiImageFieldsSchema = GeminiJobFieldsSchema.extend({
+  extractedText: z.string(),
+});
+
 type GeminiJobFields = z.infer<typeof GeminiJobFieldsSchema>;
+type GeminiImageFields = z.infer<typeof GeminiImageFieldsSchema>;
 
 interface GeminiGenerateContentResponse {
   candidates?: Array<{
@@ -55,6 +65,14 @@ interface GeminiGenerateContentResponse {
       parts?: Array<{ text?: string }>;
     };
   }>;
+}
+
+interface GeminiPart {
+  text?: string;
+  inline_data?: {
+    mime_type: string;
+    data: string;
+  };
 }
 
 function normalizeNullable(value: string | undefined): string | null {
@@ -120,31 +138,26 @@ function deterministicJobAnalysis(rawText: string): GeminiJobAnalysis {
   };
 }
 
-async function callGeminiApi(
-  prompt: string,
-  jsonMode = false,
+export function isGeminiConfigured(): boolean {
+  return Boolean(GEMINI_API_KEY);
+}
+
+async function callGeminiParts(
+  parts: GeminiPart[],
+  responseSchema?: Record<string, unknown>,
 ): Promise<string> {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY_NOT_CONFIGURED');
   }
 
   const payload: Record<string, unknown> = {
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{ role: 'user', parts }],
   };
 
-  if (jsonMode) {
+  if (responseSchema) {
     payload.generationConfig = {
       responseMimeType: 'application/json',
-      responseSchema: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          company: { type: 'string' },
-          city: { type: 'string' },
-          summaryAr: { type: 'string' },
-        },
-        required: ['title', 'company', 'city', 'summaryAr'],
-      },
+      responseSchema,
     };
   }
 
@@ -155,7 +168,7 @@ async function callGeminiApi(
       'x-goog-api-key': GEMINI_API_KEY,
     },
     body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(30_000),
+    signal: AbortSignal.timeout(45_000),
   });
 
   if (!response.ok) {
@@ -170,6 +183,27 @@ async function callGeminiApi(
   }
 
   return text;
+}
+
+async function callGeminiApi(
+  prompt: string,
+  jsonMode = false,
+): Promise<string> {
+  return callGeminiParts(
+    [{ text: prompt }],
+    jsonMode
+      ? {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            company: { type: 'string' },
+            city: { type: 'string' },
+            summaryAr: { type: 'string' },
+          },
+          required: ['title', 'company', 'city', 'summaryAr'],
+        }
+      : undefined,
+  );
 }
 
 export async function analyzeJobPostingWithGemini(
@@ -221,6 +255,62 @@ ${rawText}
       ],
     };
   }
+}
+
+export async function analyzeJobImagesWithGemini(
+  images: SafeInlineImage[],
+  existingText = '',
+): Promise<GeminiImageJobAnalysis> {
+  if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY_NOT_CONFIGURED');
+  if (images.length === 0) throw new Error('NO_IMAGES');
+
+  const prompt = `اقرأ صور إعلان الوظيفة المرفقة باستخدام OCR ثم استخرج المعلومات الصريحة فقط.
+
+قواعد إلزامية:
+- انسخ النص المقروء في extractedText دون اختراع نص غير ظاهر.
+- عند غياب المسمى أو الشركة أو المدينة أو الملخص، أعد سلسلة فارغة.
+- لا تستنتج الجنس من المسمى أو الصورة؛ سيصنف خارج النموذج من النص الصريح فقط.
+- لا تضف بريدًا أو رقمًا أو رابطًا غير ظاهر في الصور.
+- قد تكون الصور جزءًا من الإعلان نفسه، فادمج نصوصها بالترتيب.
+${existingText.trim() ? `\nنص الصفحة المرافق للاستئناس فقط:\n${existingText.slice(0, 5000)}` : ''}`;
+
+  const parts: GeminiPart[] = [
+    { text: prompt },
+    ...images.map((image) => ({
+      inline_data: {
+        mime_type: image.mimeType,
+        data: image.base64Data,
+      },
+    })),
+  ];
+
+  const rawJson = await callGeminiParts(parts, {
+    type: 'object',
+    properties: {
+      extractedText: { type: 'string' },
+      title: { type: 'string' },
+      company: { type: 'string' },
+      city: { type: 'string' },
+      summaryAr: { type: 'string' },
+    },
+    required: ['extractedText', 'title', 'company', 'city', 'summaryAr'],
+  });
+  const parsed: GeminiImageFields = GeminiImageFieldsSchema.parse(JSON.parse(rawJson));
+  const extractedText = normalizeNullable(parsed.extractedText);
+  const deterministic = deterministicJobAnalysis(
+    [existingText, extractedText].filter(Boolean).join('\n'),
+  );
+
+  return {
+    ...deterministic,
+    extractedText,
+    title: normalizeNullable(parsed.title),
+    company: normalizeNullable(parsed.company),
+    city: normalizeNullable(parsed.city),
+    summaryAr: normalizeNullable(parsed.summaryAr),
+    source: 'gemini',
+    warnings: [],
+  };
 }
 
 function buildSafeFallbackLetter(

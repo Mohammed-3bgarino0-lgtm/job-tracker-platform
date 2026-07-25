@@ -1,5 +1,7 @@
 import {
+  BRIDGE_LIMITS,
   EXTENSION_VERSION,
+  PRIMARY_WEB_ORIGIN,
   dedupeJobs,
   isAllowedBridgeSenderUrl,
   isBridgeRequest,
@@ -13,6 +15,10 @@ import {
 const PENDING_SCAN_KEY = 'qaddemPendingScan';
 const LAST_SCAN_KEY = 'qaddemLastScan';
 const activeScans = new Map();
+
+function cleanList(values) {
+  return Array.from(new Set((values ?? []).map((value) => String(value).trim()).filter(Boolean)));
+}
 
 async function sendToTab(tabId, payload) {
   if (!Number.isInteger(tabId)) return;
@@ -85,14 +91,7 @@ async function injectAndRunScanner(tabId, requestId, rounds) {
   });
 }
 
-async function scanTab({
-  requestId,
-  targetUrl,
-  targetTabId,
-  sourceTabId,
-  rounds,
-  skipPermissionCheck = false,
-}) {
+async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds }) {
   const state = {
     requestId,
     targetTabId,
@@ -102,12 +101,7 @@ async function scanTab({
   activeScans.set(requestId, state);
 
   try {
-    await forwardProgress(
-      sourceTabId,
-      requestId,
-      'loading',
-      'جارٍ انتظار اكتمال تحميل الصفحة.',
-    );
+    await forwardProgress(sourceTabId, requestId, 'loading', 'جارٍ انتظار اكتمال تحميل الصفحة.');
     await waitForTabReady(targetTabId);
     if (state.cancelled) {
       return responseMessage(requestId, 'cancelled');
@@ -117,45 +111,28 @@ async function scanTab({
     const loadedUrl = safeScanUrl(loadedTab.url ?? targetUrl.toString());
     if (!loadedUrl) throw new Error('UNSAFE_REDIRECT');
 
-    if (!skipPermissionCheck) {
-      const loadedPermission = permissionPatternForUrl(loadedUrl);
-      const permitted = await chrome.permissions.contains({
-        origins: [loadedPermission],
-      });
-      if (!permitted) {
-        throw new Error('REDIRECT_PERMISSION_REQUIRED');
-      }
+    const loadedPermission = permissionPatternForUrl(loadedUrl);
+    const permitted = await chrome.permissions.contains({
+      origins: [loadedPermission],
+    });
+    if (!permitted) {
+      throw new Error('REDIRECT_PERMISSION_REQUIRED');
     }
 
-    await forwardProgress(
-      sourceTabId,
-      requestId,
-      'scanning',
-      'بدأ فحص البطاقات الظاهرة والتمرير المحدود.',
-      {
-        currentRound: 0,
-        totalRounds: rounds,
-      },
-    );
+    await forwardProgress(sourceTabId, requestId, 'scanning', 'بدأ فحص البطاقات الظاهرة والتمرير المحدود.', {
+      currentRound: 0,
+      totalRounds: rounds,
+    });
 
-    const rawResult = await injectAndRunScanner(
-      targetTabId,
-      requestId,
-      rounds,
-    );
+    const rawResult = await injectAndRunScanner(targetTabId, requestId, rounds);
 
     if (rawResult?.cancelled || state.cancelled) {
       return responseMessage(requestId, 'cancelled');
     }
     if (rawResult?.error) throw new Error('SCANNER_FAILED');
 
-    await forwardProgress(
-      sourceTabId,
-      requestId,
-      'deduplicating',
-      'جارٍ إزالة النتائج المكررة.',
-    );
-    const jobs = dedupeJobs(rawResult?.jobs ?? []).slice(0, 100);
+    await forwardProgress(sourceTabId, requestId, 'deduplicating', 'جارٍ إزالة النتائج المكررة.');
+    const jobs = dedupeJobs(rawResult?.jobs ?? []).slice(0, BRIDGE_LIMITS.maxJobsPerScan);
     const result = {
       scannedUrl: loadedUrl.toString(),
       jobs,
@@ -163,20 +140,11 @@ async function scanTab({
       roundsCompleted: Number(rawResult?.roundsCompleted ?? 0),
       partial: Boolean(rawResult?.partial),
       targetTabId,
+      completedAt: new Date().toISOString(),
     };
 
-    await chrome.storage.local.set({
-      [LAST_SCAN_KEY]: {
-        ...result,
-        completedAt: new Date().toISOString(),
-      },
-    });
-    await forwardProgress(
-      sourceTabId,
-      requestId,
-      'complete',
-      `اكتمل الفحص وعُثر على ${jobs.length} نتيجة.`,
-    );
+    await chrome.storage.local.set({ [LAST_SCAN_KEY]: result });
+    await forwardProgress(sourceTabId, requestId, 'complete', `اكتمل الفحص وعُثر على ${jobs.length} نتيجة.`);
 
     return responseMessage(requestId, 'ok', { data: result });
   } catch (error) {
@@ -230,12 +198,7 @@ async function openAndScan(request, sourceTabId) {
     });
   }
 
-  await forwardProgress(
-    sourceTabId,
-    request.requestId,
-    'opening',
-    'جارٍ فتح رابط الوظيفة في تبويب جديد.',
-  );
+  await forwardProgress(sourceTabId, request.requestId, 'opening', 'جارٍ فتح رابط الوظيفة في تبويب جديد.');
   const tab = await chrome.tabs.create({
     url: targetUrl.toString(),
     active: true,
@@ -264,14 +227,20 @@ async function cancelScan(request) {
       internalType: 'QADDEM_SCANNER_CANCEL',
       requestId: targetRequestId,
     });
-    await forwardProgress(
-      scan.sourceTabId,
-      targetRequestId,
-      'cancelled',
-      'تم إلغاء الفحص.',
-    );
+    await forwardProgress(scan.sourceTabId, targetRequestId, 'cancelled', 'تم إلغاء الفحص.');
   }
   return responseMessage(request.requestId, 'cancelled');
+}
+
+async function getLastScanResponse(requestId) {
+  const stored = await chrome.storage.local.get(LAST_SCAN_KEY);
+  const lastScan = stored[LAST_SCAN_KEY];
+  if (!lastScan) {
+    return responseMessage(requestId, 'error', {
+      error: 'لا توجد نتيجة فحص محفوظة في الإضافة.',
+    });
+  }
+  return responseMessage(requestId, 'ok', { data: lastScan });
 }
 
 async function handleBridgeRequest(request, sender) {
@@ -286,17 +255,16 @@ async function handleBridgeRequest(request, sender) {
       data: { connected: true },
     });
   }
+  if (request.command === 'GET_LAST_SCAN') return getLastScanResponse(request.requestId);
   if (request.command === 'CANCEL_SCAN') return cancelScan(request);
   return openAndScan(request, sender.tab.id);
 }
 
 async function popupState() {
-  const stored = await chrome.storage.local.get([
-    PENDING_SCAN_KEY,
-    LAST_SCAN_KEY,
-  ]);
+  const stored = await chrome.storage.local.get([PENDING_SCAN_KEY, LAST_SCAN_KEY]);
   return {
     extensionVersion: EXTENSION_VERSION,
+    primaryWebOrigin: PRIMARY_WEB_ORIGIN,
     pending: stored[PENDING_SCAN_KEY] ?? null,
     lastScan: stored[LAST_SCAN_KEY] ?? null,
   };
@@ -324,9 +292,7 @@ async function scanCurrentTab() {
     return { ok: false, error: 'لا توجد صفحة نشطة قابلة للفحص.' };
   }
   const targetUrl = safeScanUrl(tab.url);
-  if (!targetUrl) {
-    return { ok: false, error: 'هذه الصفحة غير قابلة للفحص.' };
-  }
+  if (!targetUrl) return { ok: false, error: 'هذه الصفحة غير قابلة للفحص.' };
 
   const requestId = `popup_${crypto.randomUUID().replace(/-/g, '')}`;
   const response = await scanTab({
@@ -335,38 +301,112 @@ async function scanCurrentTab() {
     targetTabId: tab.id,
     sourceTabId: undefined,
     rounds: 7,
-    skipPermissionCheck: true,
   });
   return { ok: response.status === 'ok', response };
 }
 
+async function ocrLastScan() {
+  const stored = await chrome.storage.local.get(LAST_SCAN_KEY);
+  const lastScan = stored[LAST_SCAN_KEY];
+  if (!lastScan?.jobs?.length) {
+    return { ok: false, error: 'لا توجد نتائج لتحليل صورها.' };
+  }
+
+  const candidates = lastScan.jobs
+    .filter((job) => Array.isArray(job.imageUrls) && job.imageUrls.length > 0)
+    .slice(0, BRIDGE_LIMITS.maxOcrJobsPerRequest);
+  if (candidates.length === 0) {
+    return { ok: false, error: 'لم تُكتشف صور إعلانات داخل النتائج الحالية.' };
+  }
+
+  try {
+    const response = await fetch(`${PRIMARY_WEB_ORIGIN}/api/jobs/ocr-images`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jobs: candidates.map((job) => ({
+          sourceUrl: job.sourceUrl,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          description: job.description,
+          imageUrls: job.imageUrls.slice(0, BRIDGE_LIMITS.maxImagesPerJob),
+        })),
+      }),
+      signal: AbortSignal.timeout(90_000),
+    });
+    const payload = await response.json();
+    if (!response.ok || !payload?.success) {
+      return { ok: false, error: payload?.error ?? 'تعذر تحليل الصور.' };
+    }
+
+    const bySource = new Map((payload.results ?? []).map((result) => [result.sourceUrl, result]));
+    const jobs = lastScan.jobs.map((job) => {
+      const ocr = bySource.get(job.sourceUrl);
+      if (!ocr) return job;
+      const ocrText = typeof ocr.ocrText === 'string' && ocr.ocrText.trim() ? ocr.ocrText.trim() : null;
+      return {
+        ...job,
+        title: job.title ?? ocr.title ?? null,
+        company: job.company ?? ocr.company ?? null,
+        location: job.location ?? ocr.location ?? null,
+        description:
+          String(ocr.summaryAr ?? '').length > String(job.description ?? '').length
+            ? ocr.summaryAr
+            : job.description,
+        emails: cleanList([...job.emails, ...(ocr.emails ?? [])]),
+        phones: cleanList([...job.phones, ...(ocr.phones ?? [])]),
+        forms: cleanList([...job.forms, ...(ocr.forms ?? [])]),
+        ocrStatus: ocr.status === 'complete' ? 'complete' : 'failed',
+        ocrText,
+        evidence: cleanList([
+          ...job.evidence,
+          ...(ocrText ? [`OCR: ${ocrText.slice(0, 420)}`] : []),
+        ]),
+      };
+    });
+
+    const updated = {
+      ...lastScan,
+      jobs: dedupeJobs(jobs),
+      completedAt: new Date().toISOString(),
+    };
+    await chrome.storage.local.set({ [LAST_SCAN_KEY]: updated });
+    return {
+      ok: true,
+      processed: payload.processed ?? candidates.length,
+      failed: payload.failed ?? 0,
+      lastScan: updated,
+    };
+  } catch {
+    return { ok: false, error: 'تعذر الاتصال بخدمة تحليل الصور في موقع قدّم.' };
+  }
+}
+
+async function clearLastScan() {
+  await chrome.storage.local.remove(LAST_SCAN_KEY);
+  return { ok: true };
+}
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (isBridgeRequest(message)) {
-    handleBridgeRequest(message, sender)
-      .then(sendResponse)
-      .catch(() =>
-        sendResponse(
-          responseMessage(message.requestId, 'error', {
-            error: 'تعذر تنفيذ طلب الإضافة.',
-          }),
-        ),
-      );
+    handleBridgeRequest(message, sender).then(sendResponse).catch(() =>
+      sendResponse(
+        responseMessage(message.requestId, 'error', {
+          error: 'تعذر تنفيذ طلب الإضافة.',
+        }),
+      ),
+    );
     return true;
   }
 
   if (message?.internalType === 'QADDEM_SCANNER_PROGRESS') {
     const scan = activeScans.get(String(message.requestId));
     if (scan) {
-      void forwardProgress(
-        scan.sourceTabId,
-        scan.requestId,
-        'scanning',
-        'جارٍ تحميل وفحص المزيد من البطاقات.',
-        {
-          currentRound: Number(message.currentRound),
-          totalRounds: Number(message.totalRounds),
-        },
-      );
+      forwardProgress(scan.sourceTabId, scan.requestId, 'scanning', 'جارٍ تحميل وفحص المزيد من البطاقات.', {
+        currentRound: Number(message.currentRound),
+        totalRounds: Number(message.totalRounds),
+      });
     }
     sendResponse({ ok: true });
     return false;
@@ -382,6 +422,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message?.internalType === 'QADDEM_POPUP_SCAN_CURRENT') {
     scanCurrentTab().then(sendResponse);
+    return true;
+  }
+  if (message?.internalType === 'QADDEM_POPUP_OCR_LAST') {
+    ocrLastScan().then(sendResponse);
+    return true;
+  }
+  if (message?.internalType === 'QADDEM_POPUP_CLEAR_LAST') {
+    clearLastScan().then(sendResponse);
     return true;
   }
 

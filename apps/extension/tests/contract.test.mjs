@@ -5,6 +5,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { CONTRACT_DATA } from '../src/lib/contract-data.js';
 import {
+  PRIMARY_WEB_ORIGIN,
   isBridgeRequest,
   permissionPatternForUrl,
   safeScanUrl,
@@ -19,6 +20,8 @@ const sharedContractPath = path.resolve(
 test('extension contract remains identical to shared website contract', async () => {
   const shared = JSON.parse(await readFile(sharedContractPath, 'utf8'));
   assert.deepEqual(CONTRACT_DATA, shared);
+  assert.equal(CONTRACT_DATA.extensionVersion, '1.5.0');
+  assert.equal(PRIMARY_WEB_ORIGIN, 'https://qaddemweb-production.up.railway.app');
 });
 
 test('safe URL validation blocks internal networks and unsafe schemes', () => {
@@ -32,7 +35,7 @@ test('safe URL validation blocks internal networks and unsafe schemes', () => {
   assert.equal(permissionPatternForUrl(url), 'https://careers.example.com/*');
 });
 
-test('bridge request validation rejects malformed envelopes', () => {
+test('bridge request validation accepts last-scan import and rejects malformed envelopes', () => {
   assert.equal(
     isBridgeRequest({
       messageType: CONTRACT_DATA.messageTypes.request,
@@ -43,6 +46,16 @@ test('bridge request validation rejects malformed envelopes', () => {
         url: 'https://example.com/jobs',
         depth: 'deep',
       },
+    }),
+    true,
+  );
+
+  assert.equal(
+    isBridgeRequest({
+      messageType: CONTRACT_DATA.messageTypes.request,
+      protocol: CONTRACT_DATA.protocol,
+      requestId: 'import_12345678',
+      command: 'GET_LAST_SCAN',
     }),
     true,
   );

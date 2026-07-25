@@ -11,8 +11,9 @@
 
 body {
   margin: 0;
-  width: 360px;
-  min-height: 420px;
+  width: 390px;
+  max-height: 640px;
+  overflow-y: auto;
   background: #f8fafc;
 }
 
@@ -41,6 +42,7 @@ header {
 
 h1,
 h2,
+h3,
 p {
   margin: 0;
 }
@@ -62,6 +64,13 @@ header p {
   border-radius: 18px;
   background: white;
   box-shadow: 0 8px 24px rgb(15 23 42 / 6%);
+}
+
+.card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .card h2 {
@@ -113,9 +122,112 @@ button.secondary {
   background: #0f172a;
 }
 
+button.outline {
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #0f172a;
+}
+
+button.text-button {
+  width: auto;
+  margin: 0;
+  background: transparent;
+  padding: 4px 6px;
+  color: #be123c;
+  font-size: 11px;
+}
+
 button:disabled {
   cursor: wait;
   opacity: 0.6;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.metric {
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 9px;
+  text-align: center;
+}
+
+.metric strong {
+  display: block;
+  font-size: 16px;
+}
+
+.metric span {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 9px;
+}
+
+.results-list {
+  display: grid;
+  gap: 8px;
+  max-height: 230px;
+  margin-top: 12px;
+  overflow-y: auto;
+}
+
+.result-item {
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+  padding: 10px;
+  background: #fff;
+}
+
+.result-item h3 {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.result-item p {
+  margin-top: 4px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.result-meta span {
+  border-radius: 999px;
+  background: #f1f5f9;
+  padding: 3px 6px;
+  color: #475569;
+  font-size: 9px;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.action-grid button {
+  margin-top: 0;
+  padding: 10px 8px;
+  font-size: 11px;
+}
+
+.action-grid button:last-child {
+  grid-column: 1 / -1;
+}
+
+.privacy-note {
+  font-size: 10px !important;
 }
 
 #status {
