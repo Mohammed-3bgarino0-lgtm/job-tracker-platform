@@ -6,8 +6,10 @@ import { fileURLToPath } from 'node:url';
 import { CONTRACT_DATA } from '../src/lib/contract-data.js';
 import {
   PRIMARY_WEB_ORIGIN,
+  dedupeJobs,
   isBridgeRequest,
   permissionPatternForUrl,
+  roundsForDepth,
   safeScanUrl,
 } from '../src/lib/contract.js';
 
@@ -20,8 +22,12 @@ const sharedContractPath = path.resolve(
 test('extension contract remains identical to shared website contract', async () => {
   const shared = JSON.parse(await readFile(sharedContractPath, 'utf8'));
   assert.deepEqual(CONTRACT_DATA, shared);
-  assert.equal(CONTRACT_DATA.extensionVersion, '1.5.1');
+  assert.equal(CONTRACT_DATA.extensionVersion, '1.6.0');
   assert.equal(PRIMARY_WEB_ORIGIN, 'https://qaddemweb-production.up.railway.app');
+  assert.equal(roundsForDepth('quick'), 6);
+  assert.equal(roundsForDepth('balanced'), 12);
+  assert.equal(roundsForDepth('deep'), 24);
+  assert.equal(CONTRACT_DATA.limits.maxJobsPerScan, 250);
 });
 
 test('safe URL validation blocks internal networks and unsafe schemes', () => {
@@ -72,5 +78,38 @@ test('bridge request validation accepts last-scan import and rejects malformed e
       },
     }),
     false,
+  );
+});
+
+test('deduplication keeps multiple roles from one X post while merging repeated snapshots', () => {
+  const base = {
+    sourceUrl: 'https://x.com/jobs/status/123',
+    sourcePlatform: 'x',
+    company: null,
+    location: 'الرياض',
+    description: 'وظائف متعددة',
+    applyUrl: 'https://example.com/apply',
+    emails: [],
+    phones: [],
+    forms: [],
+    imageUrls: [],
+    ocrStatus: 'not_applicable',
+    ocrText: null,
+    evidence: [],
+    detectedAt: '2026-07-25T00:00:00.000Z',
+    reviewStatus: 'potential',
+    confidence: 0.6,
+  };
+
+  const result = dedupeJobs([
+    { ...base, title: 'محاسب' },
+    { ...base, title: 'مهندس' },
+    { ...base, title: 'محاسب', emails: ['jobs@example.com'] },
+  ]);
+
+  assert.equal(result.length, 2);
+  assert.deepEqual(
+    result.find((record) => record.title === 'محاسب')?.emails,
+    ['jobs@example.com'],
   );
 });
