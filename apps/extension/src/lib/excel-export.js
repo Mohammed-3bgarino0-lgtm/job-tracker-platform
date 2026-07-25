@@ -16,17 +16,35 @@ function cell(value, styleId) {
   return `<Cell${style}><Data ss:Type="String">${xmlEscape(value)}</Data></Cell>`;
 }
 
+function reviewLabel(value) {
+  return (
+    {
+      confirmed: 'واضحة',
+      potential: 'محتملة',
+      needs_ocr: 'تحتاج OCR',
+      incomplete: 'غير مكتملة',
+    }[value] ?? 'تحتاج مراجعة'
+  );
+}
+
 export function buildExcelXml(jobs) {
   const headers = [
+    'حالة المراجعة',
+    'درجة الثقة',
     'المسمى الوظيفي',
     'الشركة',
     'المدينة',
-    'الوصف',
+    'الناشر',
+    'معرف الناشر',
+    'تاريخ النشر',
+    'الوصف المنظم',
+    'النص الخام الكامل',
     'البريد الإلكتروني',
     'الجوال',
     'نماذج التقديم',
     'رابط التقديم',
     'رابط المصدر',
+    'معرف المنشور',
     'المنصة',
     'عدد الصور',
     'حالة OCR',
@@ -35,15 +53,22 @@ export function buildExcelXml(jobs) {
   ];
 
   const rows = (jobs ?? []).map((job) => [
+    reviewLabel(job.reviewStatus),
+    `${Math.round(Number(job.confidence ?? 0) * 100)}%`,
     job.title ?? '',
     job.company ?? '',
     job.location ?? '',
+    job.authorName ?? '',
+    job.authorHandle ?? '',
+    job.publishedAt ?? '',
     job.description ?? '',
+    job.rawText ?? '',
     joinList(job.emails),
     joinList(job.phones),
     joinList(job.forms),
     job.applyUrl ?? '',
     job.sourceUrl ?? '',
+    job.sourceItemId ?? '',
     job.sourcePlatform ?? '',
     String(job.imageUrls?.length ?? 0),
     job.ocrStatus ?? '',
@@ -67,7 +92,7 @@ export function buildExcelXml(jobs) {
   <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>
   <Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#D1FAE5" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
  </Styles>
- <Worksheet ss:Name="الوظائف">
+ <Worksheet ss:Name="جميع النتائج">
   <Table ss:DefaultColumnWidth="140">
    ${headerRow}
    ${dataRows}

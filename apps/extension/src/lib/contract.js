@@ -135,10 +135,36 @@ function cleanList(values) {
 function canonicalUrl(input) {
   const url = safeScanUrl(input ?? '');
   if (!url) return null;
-  url.searchParams.delete('utm_source');
-  url.searchParams.delete('utm_medium');
-  url.searchParams.delete('utm_campaign');
+  for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']) {
+    url.searchParams.delete(key);
+  }
   return url.toString().replace(/\/$/, '').toLowerCase();
+}
+
+function statusRank(value) {
+  return (
+    {
+      confirmed: 4,
+      potential: 3,
+      needs_ocr: 2,
+      incomplete: 1,
+    }[value] ?? 0
+  );
+}
+
+function recordKey(record) {
+  const titleKey = String(record.title ?? '').trim().toLowerCase() || '__raw__';
+  if (record.sourcePlatform === 'x') {
+    const sourceKey = canonicalUrl(record.sourceUrl);
+    if (sourceKey) return `x:${sourceKey}|${titleKey}`;
+  }
+
+  const urlKey = canonicalUrl(record.applyUrl) ?? canonicalUrl(record.sourceUrl);
+  if (urlKey) return `url:${urlKey}`;
+
+  return `text:${[record.title, record.company, record.location]
+    .map((value) => String(value ?? '').trim().toLowerCase())
+    .join('|')}`;
 }
 
 export function dedupeJobs(records) {
@@ -156,13 +182,15 @@ export function dedupeJobs(records) {
         rawRecord.ocrStatus ?? (imageUrls.length > 0 ? 'not_requested' : 'not_applicable'),
       ocrText: rawRecord.ocrText ?? null,
       evidence: cleanList(rawRecord.evidence),
+      reviewStatus: rawRecord.reviewStatus ?? 'incomplete',
+      confidence: Math.max(0, Math.min(1, Number(rawRecord.confidence ?? 0))),
+      rawText: rawRecord.rawText ?? null,
+      authorName: rawRecord.authorName ?? null,
+      authorHandle: rawRecord.authorHandle ?? null,
+      publishedAt: rawRecord.publishedAt ?? null,
+      sourceItemId: rawRecord.sourceItemId ?? null,
     };
-    const urlKey = canonicalUrl(record.applyUrl) ?? canonicalUrl(record.sourceUrl);
-    const key = urlKey
-      ? `url:${urlKey}`
-      : `text:${[record.title, record.company, record.location]
-          .map((value) => String(value ?? '').trim().toLowerCase())
-          .join('|')}`;
+    const key = recordKey(record);
     const current = merged.get(key);
 
     if (!current) {
@@ -199,6 +227,19 @@ export function dedupeJobs(records) {
           ? record.ocrText
           : current.ocrText,
       evidence: cleanList([...current.evidence, ...record.evidence]),
+      reviewStatus:
+        statusRank(record.reviewStatus) > statusRank(current.reviewStatus)
+          ? record.reviewStatus
+          : current.reviewStatus,
+      confidence: Math.max(Number(current.confidence ?? 0), Number(record.confidence ?? 0)),
+      rawText:
+        String(record.rawText ?? '').length > String(current.rawText ?? '').length
+          ? record.rawText
+          : current.rawText,
+      authorName: current.authorName ?? record.authorName,
+      authorHandle: current.authorHandle ?? record.authorHandle,
+      publishedAt: current.publishedAt ?? record.publishedAt,
+      sourceItemId: current.sourceItemId ?? record.sourceItemId,
     });
   }
 

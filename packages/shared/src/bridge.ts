@@ -28,6 +28,11 @@ export type JobOcrStatus =
   | 'not_requested'
   | 'complete'
   | 'failed';
+export type JobReviewStatus =
+  | 'confirmed'
+  | 'potential'
+  | 'needs_ocr'
+  | 'incomplete';
 
 export interface JobScanRecord {
   sourceUrl: string;
@@ -45,6 +50,13 @@ export interface JobScanRecord {
   ocrText: string | null;
   evidence: string[];
   detectedAt: string;
+  reviewStatus?: JobReviewStatus;
+  confidence?: number;
+  rawText?: string | null;
+  authorName?: string | null;
+  authorHandle?: string | null;
+  publishedAt?: string | null;
+  sourceItemId?: string | null;
 }
 
 export interface BridgeScanResult {
@@ -53,6 +65,13 @@ export interface BridgeScanResult {
   loginRequired: boolean;
   roundsCompleted: number;
   partial: boolean;
+  truncated?: boolean;
+  stopReason?: string;
+  sourceItemsScanned?: number;
+  confirmedCount?: number;
+  potentialCount?: number;
+  needsOcrCount?: number;
+  incompleteCount?: number;
   targetTabId?: number;
   completedAt?: string;
 }
@@ -252,13 +271,30 @@ function canonicalUrl(input: string | null): string | null {
   if (!input) return null;
   const parsed = parseSafeScanUrl(input);
   if (!parsed) return null;
-  parsed.searchParams.delete('utm_source');
-  parsed.searchParams.delete('utm_medium');
-  parsed.searchParams.delete('utm_campaign');
+  for (const key of ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']) {
+    parsed.searchParams.delete(key);
+  }
   return parsed.toString().replace(/\/$/, '').toLowerCase();
 }
 
+function statusRank(status: JobReviewStatus | undefined): number {
+  return (
+    {
+      confirmed: 4,
+      potential: 3,
+      needs_ocr: 2,
+      incomplete: 1,
+    }[status ?? 'incomplete'] ?? 0
+  );
+}
+
 function recordKey(record: JobScanRecord): string {
+  const titleKey = record.title?.trim().toLowerCase() || '__raw__';
+  if (record.sourcePlatform === 'x') {
+    const sourceKey = canonicalUrl(record.sourceUrl);
+    if (sourceKey) return `x:${sourceKey}|${titleKey}`;
+  }
+
   const urlKey = canonicalUrl(record.applyUrl) ?? canonicalUrl(record.sourceUrl);
   if (urlKey) return `url:${urlKey}`;
 
@@ -272,50 +308,71 @@ export function dedupeJobRecords(records: JobScanRecord[]): JobScanRecord[] {
 
   for (const record of records) {
     const key = recordKey(record);
+    const normalized: JobScanRecord = {
+      ...record,
+      emails: mergeUnique([], record.emails),
+      phones: mergeUnique([], record.phones),
+      forms: mergeUnique([], record.forms),
+      imageUrls: mergeUnique([], record.imageUrls),
+      evidence: mergeUnique([], record.evidence),
+      reviewStatus: record.reviewStatus ?? 'incomplete',
+      confidence: Math.max(0, Math.min(1, Number(record.confidence ?? 0))),
+      rawText: record.rawText ?? null,
+      authorName: record.authorName ?? null,
+      authorHandle: record.authorHandle ?? null,
+      publishedAt: record.publishedAt ?? null,
+      sourceItemId: record.sourceItemId ?? null,
+    };
     const current = merged.get(key);
 
     if (!current) {
-      merged.set(key, {
-        ...record,
-        emails: mergeUnique([], record.emails),
-        phones: mergeUnique([], record.phones),
-        forms: mergeUnique([], record.forms),
-        imageUrls: mergeUnique([], record.imageUrls),
-        evidence: mergeUnique([], record.evidence),
-      });
+      merged.set(key, normalized);
       continue;
     }
 
-    const imageUrls = mergeUnique(current.imageUrls, record.imageUrls);
+    const imageUrls = mergeUnique(current.imageUrls, normalized.imageUrls);
     const ocrStatus =
-      current.ocrStatus === 'complete' || record.ocrStatus === 'complete'
+      current.ocrStatus === 'complete' || normalized.ocrStatus === 'complete'
         ? 'complete'
         : imageUrls.length > 0
-          ? current.ocrStatus === 'failed' && record.ocrStatus === 'failed'
+          ? current.ocrStatus === 'failed' && normalized.ocrStatus === 'failed'
             ? 'failed'
             : 'not_requested'
           : 'not_applicable';
 
     merged.set(key, {
       ...current,
-      title: current.title ?? record.title,
-      company: current.company ?? record.company,
-      location: current.location ?? record.location,
+      title: current.title ?? normalized.title,
+      company: current.company ?? normalized.company,
+      location: current.location ?? normalized.location,
       description:
-        (record.description?.length ?? 0) > (current.description?.length ?? 0)
-          ? record.description
+        (normalized.description?.length ?? 0) > (current.description?.length ?? 0)
+          ? normalized.description
           : current.description,
-      applyUrl: current.applyUrl ?? record.applyUrl,
-      emails: mergeUnique(current.emails, record.emails),
-      phones: mergeUnique(current.phones, record.phones),
-      forms: mergeUnique(current.forms, record.forms),
+      applyUrl: current.applyUrl ?? normalized.applyUrl,
+      emails: mergeUnique(current.emails, normalized.emails),
+      phones: mergeUnique(current.phones, normalized.phones),
+      forms: mergeUnique(current.forms, normalized.forms),
       imageUrls,
       ocrStatus,
       ocrText:
-        (record.ocrText?.length ?? 0) > (current.ocrText?.length ?? 0)
-          ? record.ocrText
+        (normalized.ocrText?.length ?? 0) > (current.ocrText?.length ?? 0)
+          ? normalized.ocrText
           : current.ocrText,
-      evidence: mergeUnique(current.evidence, record.evidence),
+      evidence: mergeUnique(current.evidence, normalized.evidence),
+      reviewStatus:
+        statusRank(normalized.reviewStatus) > statusRank(current.reviewStatus)
+          ? normalized.reviewStatus
+          : current.reviewStatus,
+      confidence: Math.max(Number(current.confidence ?? 0), Number(normalized.confidence ?? 0)),
+      rawText:
+        (normalized.rawText?.length ?? 0) > (current.rawText?.length ?? 0)
+          ? normalized.rawText
+          : current.rawText,
+      authorName: current.authorName ?? normalized.authorName,
+      authorHandle: current.authorHandle ?? normalized.authorHandle,
+      publishedAt: current.publishedAt ?? normalized.publishedAt,
+      sourceItemId: current.sourceItemId ?? normalized.sourceItemId,
     });
   }
 

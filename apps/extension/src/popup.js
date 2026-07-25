@@ -41,11 +41,55 @@ function metric(value, label) {
   const item = document.createElement('div');
   item.className = 'metric';
   const strong = document.createElement('strong');
-  strong.textContent = String(value);
+  strong.textContent = String(value ?? 0);
   const span = document.createElement('span');
   span.textContent = label;
   item.append(strong, span);
   return item;
+}
+
+function reviewLabel(status) {
+  return (
+    {
+      confirmed: 'واضحة',
+      potential: 'محتملة',
+      needs_ocr: 'تحتاج OCR',
+      incomplete: 'غير مكتملة',
+    }[status] ?? 'تحتاج مراجعة'
+  );
+}
+
+function reviewClass(status) {
+  return (
+    {
+      confirmed: 'success',
+      potential: 'warning',
+      needs_ocr: 'warning',
+      incomplete: '',
+    }[status] ?? ''
+  );
+}
+
+function calculateCounts(lastScan) {
+  const jobs = lastScan?.jobs ?? [];
+  return {
+    sourceItems: lastScan?.sourceItemsScanned ?? new Set(jobs.map((job) => job.sourceItemId ?? job.sourceUrl)).size,
+    jobs: jobs.length,
+    confirmed:
+      lastScan?.confirmedCount ??
+      jobs.filter((job) => job.reviewStatus === 'confirmed').length,
+    potential:
+      lastScan?.potentialCount ??
+      jobs.filter((job) => job.reviewStatus === 'potential').length,
+    needsOcr:
+      lastScan?.needsOcrCount ??
+      jobs.filter((job) => job.reviewStatus === 'needs_ocr').length,
+    incomplete:
+      lastScan?.incompleteCount ??
+      jobs.filter((job) => job.reviewStatus === 'incomplete').length,
+    images: jobs.reduce((total, job) => total + (job.imageUrls?.length ?? 0), 0),
+    ocrComplete: jobs.filter((job) => job.ocrStatus === 'complete').length,
+  };
 }
 
 function renderResults(lastScan) {
@@ -53,15 +97,17 @@ function renderResults(lastScan) {
   scanMetrics.replaceChildren();
 
   const jobs = lastScan?.jobs ?? [];
-  const imageCount = jobs.reduce((total, job) => total + (job.imageUrls?.length ?? 0), 0);
-  const ocrCount = jobs.filter((job) => job.ocrStatus === 'complete').length;
+  const counts = calculateCounts(lastScan);
   scanMetrics.append(
-    metric(jobs.length, 'نتيجة'),
-    metric(imageCount, 'صورة'),
-    metric(ocrCount, 'OCR مكتمل'),
+    metric(counts.sourceItems, 'منشور/بطاقة'),
+    metric(counts.jobs, 'نتيجة'),
+    metric(counts.confirmed, 'واضحة'),
+    metric(counts.potential, 'محتملة'),
+    metric(counts.needsOcr, 'تحتاج OCR'),
+    metric(counts.incomplete, 'غير مكتملة'),
   );
 
-  for (const [index, job] of jobs.slice(0, 20).entries()) {
+  for (const [index, job] of jobs.entries()) {
     const item = document.createElement('article');
     item.className = 'result-item';
     const title = document.createElement('h3');
@@ -71,9 +117,21 @@ function renderResults(lastScan) {
     const meta = document.createElement('div');
     meta.className = 'result-meta';
 
+    const review = document.createElement('span');
+    review.className = `badge ${reviewClass(job.reviewStatus)}`;
+    const confidence = Math.round(Number(job.confidence ?? 0) * 100);
+    review.textContent = `${reviewLabel(job.reviewStatus)}${confidence ? ` · ${confidence}%` : ''}`;
+    meta.append(review);
+
     const platform = document.createElement('span');
     platform.textContent = job.sourcePlatform ?? 'unknown';
     meta.append(platform);
+
+    if (job.authorHandle || job.authorName) {
+      const author = document.createElement('span');
+      author.textContent = job.authorHandle ?? job.authorName;
+      meta.append(author);
+    }
 
     if (job.imageUrls?.length) {
       const images = document.createElement('span');
@@ -89,9 +147,9 @@ function renderResults(lastScan) {
       ocr.textContent = 'يحتاج OCR';
       meta.append(ocr);
     }
-    if (job.applyUrl || job.forms?.length) {
+    if (job.applyUrl || job.forms?.length || job.emails?.length || job.phones?.length) {
       const apply = document.createElement('span');
-      apply.textContent = 'رابط تقديم';
+      apply.textContent = 'طريقة تقديم مكتشفة';
       meta.append(apply);
     }
 
@@ -99,13 +157,7 @@ function renderResults(lastScan) {
     resultsList.append(item);
   }
 
-  if (jobs.length > 20) {
-    const remaining = document.createElement('p');
-    remaining.textContent = `توجد ${jobs.length - 20} نتيجة إضافية ستظهر كاملة عند الإرسال إلى الموقع أو التصدير.`;
-    resultsList.append(remaining);
-  }
-
-  ocrButton.disabled = imageCount === 0;
+  ocrButton.disabled = counts.images === 0;
   exportButton.disabled = jobs.length === 0;
   openSiteButton.disabled = jobs.length === 0;
 }
@@ -126,8 +178,12 @@ async function refreshState() {
 
   if (currentLastScan) {
     lastScanCard.classList.remove('hidden');
-    const count = currentLastScan.jobs?.length ?? 0;
-    lastScanSummary.textContent = `تم العثور على ${count} نتيجة. راجعها قبل النقل أو التصدير.`;
+    const counts = calculateCounts(currentLastScan);
+    const completeness =
+      currentLastScan.partial || currentLastScan.truncated
+        ? 'الفحص جزئي؛ أعد الفحص أو استخدم العمق العميق لإظهار مزيد من النتائج.'
+        : 'تمت مراجعة جميع البطاقات التي حمّلتها الصفحة أثناء الفحص.';
+    lastScanSummary.textContent = `تمت قراءة ${counts.sourceItems} بطاقة وإنتاج ${counts.jobs} نتيجة. ${completeness}`;
     renderResults(currentLastScan);
   } else {
     lastScanCard.classList.add('hidden');
@@ -156,7 +212,7 @@ async function scanCurrentPageWithActiveTab() {
   const rawResult = await chrome.tabs.sendMessage(tab.id, {
     internalType: 'QADDEM_SCANNER_RUN',
     requestId,
-    rounds: 7,
+    rounds: 24,
   });
 
   if (rawResult?.cancelled) {
@@ -179,6 +235,13 @@ async function scanCurrentPageWithActiveTab() {
     loginRequired: Boolean(rawResult?.loginRequired),
     roundsCompleted: Number(rawResult?.roundsCompleted ?? 0),
     partial: Boolean(rawResult?.partial),
+    truncated: Boolean(rawResult?.truncated) || (rawResult?.jobs?.length ?? 0) > jobs.length,
+    stopReason: rawResult?.stopReason ?? null,
+    sourceItemsScanned: Number(rawResult?.sourceItemsScanned ?? 0),
+    confirmedCount: jobs.filter((job) => job.reviewStatus === 'confirmed').length,
+    potentialCount: jobs.filter((job) => job.reviewStatus === 'potential').length,
+    needsOcrCount: jobs.filter((job) => job.reviewStatus === 'needs_ocr').length,
+    incompleteCount: jobs.filter((job) => job.reviewStatus === 'incomplete').length,
     targetTabId: tab.id,
     completedAt: new Date().toISOString(),
   };
@@ -215,12 +278,18 @@ grantButton.addEventListener('click', async () => {
 
 scanCurrentButton.addEventListener('click', async () => {
   scanCurrentButton.disabled = true;
-  setStatus('جارٍ فحص الصفحة الحالية باستخدام صلاحية التبويب النشط…');
+  setStatus('جارٍ بدء فحص شامل وتجميع جميع المنشورات المحملة أثناء التمرير…');
 
   try {
     const lastScan = await scanCurrentPageWithActiveTab();
-    const count = lastScan.jobs.length;
-    setStatus(`اكتمل الفحص وعُثر على ${count} نتيجة. راجع القائمة أدناه.`);
+    const counts = calculateCounts(lastScan);
+    const warning =
+      lastScan.partial || lastScan.truncated
+        ? ' بقيت نتائج محتملة خارج حد الفحص؛ أعد تشغيله لإكمال المزيد.'
+        : '';
+    setStatus(
+      `اكتمل الفحص: ${counts.sourceItems} بطاقة و${counts.jobs} نتيجة، منها ${counts.confirmed} واضحة.${warning}`,
+    );
     await refreshState();
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
@@ -275,14 +344,14 @@ openSiteButton.addEventListener('click', async () => {
   if (!currentLastScan?.jobs?.length) return;
   const destination = `${PRIMARY_WEB_ORIGIN}/devices?import=last`;
   await chrome.tabs.create({ url: destination, active: true });
-  setStatus('تم فتح موقع قدّم لاستيراد آخر فحص.');
+  setStatus('تم فتح موقع قدّم لاستيراد جميع نتائج آخر فحص.');
 });
 
 exportButton.addEventListener('click', () => {
   if (!currentLastScan?.jobs?.length) return;
   const date = new Date().toISOString().slice(0, 10);
   downloadJobsExcel(currentLastScan.jobs, `qaddem-jobs-${date}.xls`);
-  setStatus('تم إنشاء ملف Excel بالنتائج الحالية.');
+  setStatus(`تم إنشاء ملف Excel ويحتوي على جميع النتائج الحالية وعددها ${currentLastScan.jobs.length}.`);
 });
 
 clearButton.addEventListener('click', async () => {

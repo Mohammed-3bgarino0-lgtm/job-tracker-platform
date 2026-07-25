@@ -20,6 +20,15 @@ function cleanList(values) {
   return Array.from(new Set((values ?? []).map((value) => String(value).trim()).filter(Boolean)));
 }
 
+function resultCounts(jobs) {
+  return {
+    confirmedCount: jobs.filter((job) => job.reviewStatus === 'confirmed').length,
+    potentialCount: jobs.filter((job) => job.reviewStatus === 'potential').length,
+    needsOcrCount: jobs.filter((job) => job.reviewStatus === 'needs_ocr').length,
+    incompleteCount: jobs.filter((job) => job.reviewStatus === 'incomplete').length,
+  };
+}
+
 async function sendToTab(tabId, payload) {
   if (!Number.isInteger(tabId)) return;
   try {
@@ -43,7 +52,7 @@ async function forwardResponse(sourceTabId, payload) {
   });
 }
 
-async function waitForTabReady(tabId, timeoutMs = 20_000) {
+async function waitForTabReady(tabId, timeoutMs = 30_000) {
   const tab = await chrome.tabs.get(tabId);
   if (tab.status === 'complete') return;
 
@@ -119,10 +128,16 @@ async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds 
       throw new Error('REDIRECT_PERMISSION_REQUIRED');
     }
 
-    await forwardProgress(sourceTabId, requestId, 'scanning', 'بدأ فحص البطاقات الظاهرة والتمرير المحدود.', {
-      currentRound: 0,
-      totalRounds: rounds,
-    });
+    await forwardProgress(
+      sourceTabId,
+      requestId,
+      'scanning',
+      'بدأ الفحص الشامل وتجميع البطاقات في كل جولة حتى لا تضيع العناصر التي يخفيها التمرير.',
+      {
+        currentRound: 0,
+        totalRounds: rounds,
+      },
+    );
 
     const rawResult = await injectAndRunScanner(targetTabId, requestId, rounds);
 
@@ -131,20 +146,35 @@ async function scanTab({ requestId, targetUrl, targetTabId, sourceTabId, rounds 
     }
     if (rawResult?.error) throw new Error('SCANNER_FAILED');
 
-    await forwardProgress(sourceTabId, requestId, 'deduplicating', 'جارٍ إزالة النتائج المكررة.');
-    const jobs = dedupeJobs(rawResult?.jobs ?? []).slice(0, BRIDGE_LIMITS.maxJobsPerScan);
+    await forwardProgress(sourceTabId, requestId, 'deduplicating', 'جارٍ إزالة التكرار مع الحفاظ على الوظائف المتعددة داخل المنشور الواحد.');
+    const rawJobs = rawResult?.jobs ?? [];
+    const jobs = dedupeJobs(rawJobs).slice(0, BRIDGE_LIMITS.maxJobsPerScan);
+    const counts = resultCounts(jobs);
     const result = {
       scannedUrl: loadedUrl.toString(),
       jobs,
       loginRequired: Boolean(rawResult?.loginRequired),
       roundsCompleted: Number(rawResult?.roundsCompleted ?? 0),
       partial: Boolean(rawResult?.partial),
+      truncated:
+        Boolean(rawResult?.truncated) ||
+        rawJobs.length > jobs.length ||
+        jobs.length >= BRIDGE_LIMITS.maxJobsPerScan,
+      stopReason: rawResult?.stopReason ?? null,
+      sourceItemsScanned: Number(rawResult?.sourceItemsScanned ?? jobs.length),
+      ...counts,
       targetTabId,
       completedAt: new Date().toISOString(),
     };
 
     await chrome.storage.local.set({ [LAST_SCAN_KEY]: result });
-    await forwardProgress(sourceTabId, requestId, 'complete', `اكتمل الفحص وعُثر على ${jobs.length} نتيجة.`);
+    const completion = result.partial || result.truncated ? 'الفحص جزئي ويمكن تكراره لإظهار مزيد من النتائج.' : 'اكتمل فحص جميع البطاقات المحملة.';
+    await forwardProgress(
+      sourceTabId,
+      requestId,
+      'complete',
+      `تمت قراءة ${result.sourceItemsScanned} بطاقة وإنتاج ${jobs.length} نتيجة. ${completion}`,
+    );
 
     return responseMessage(requestId, 'ok', { data: result });
   } catch (error) {
@@ -198,7 +228,7 @@ async function openAndScan(request, sourceTabId) {
     });
   }
 
-  await forwardProgress(sourceTabId, request.requestId, 'opening', 'جارٍ فتح رابط الوظيفة في تبويب جديد.');
+  await forwardProgress(sourceTabId, request.requestId, 'opening', 'جارٍ فتح رابط الوظائف في تبويب جديد.');
   const tab = await chrome.tabs.create({
     url: targetUrl.toString(),
     active: true,
@@ -300,7 +330,7 @@ async function scanCurrentTab() {
     targetUrl,
     targetTabId: tab.id,
     sourceTabId: undefined,
-    rounds: 7,
+    rounds: 24,
   });
   return { ok: response.status === 'ok', response };
 }
@@ -333,7 +363,7 @@ async function ocrLastScan() {
           imageUrls: job.imageUrls.slice(0, BRIDGE_LIMITS.maxImagesPerJob),
         })),
       }),
-      signal: AbortSignal.timeout(90_000),
+      signal: AbortSignal.timeout(120_000),
     });
     const payload = await response.json();
     if (!response.ok || !payload?.success) {
@@ -345,9 +375,10 @@ async function ocrLastScan() {
       const ocr = bySource.get(job.sourceUrl);
       if (!ocr) return job;
       const ocrText = typeof ocr.ocrText === 'string' && ocr.ocrText.trim() ? ocr.ocrText.trim() : null;
+      const resolvedTitle = job.title ?? ocr.title ?? null;
       return {
         ...job,
-        title: job.title ?? ocr.title ?? null,
+        title: resolvedTitle,
         company: job.company ?? ocr.company ?? null,
         location: job.location ?? ocr.location ?? null,
         description:
@@ -359,6 +390,16 @@ async function ocrLastScan() {
         forms: cleanList([...job.forms, ...(ocr.forms ?? [])]),
         ocrStatus: ocr.status === 'complete' ? 'complete' : 'failed',
         ocrText,
+        reviewStatus:
+          ocr.status === 'complete' && resolvedTitle
+            ? job.reviewStatus === 'confirmed'
+              ? 'confirmed'
+              : 'potential'
+            : job.reviewStatus,
+        confidence:
+          ocr.status === 'complete' && resolvedTitle
+            ? Math.max(Number(job.confidence ?? 0), 0.72)
+            : Number(job.confidence ?? 0),
         evidence: cleanList([
           ...job.evidence,
           ...(ocrText ? [`OCR: ${ocrText.slice(0, 420)}`] : []),
@@ -366,9 +407,11 @@ async function ocrLastScan() {
       };
     });
 
+    const deduped = dedupeJobs(jobs);
     const updated = {
       ...lastScan,
-      jobs: dedupeJobs(jobs),
+      jobs: deduped,
+      ...resultCounts(deduped),
       completedAt: new Date().toISOString(),
     };
     await chrome.storage.local.set({ [LAST_SCAN_KEY]: updated });
@@ -403,10 +446,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.internalType === 'QADDEM_SCANNER_PROGRESS') {
     const scan = activeScans.get(String(message.requestId));
     if (scan) {
-      forwardProgress(scan.sourceTabId, scan.requestId, 'scanning', 'جارٍ تحميل وفحص المزيد من البطاقات.', {
-        currentRound: Number(message.currentRound),
-        totalRounds: Number(message.totalRounds),
-      });
+      forwardProgress(
+        scan.sourceTabId,
+        scan.requestId,
+        'scanning',
+        'جارٍ تحميل وفحص المزيد من البطاقات مع الاحتفاظ بنتائج الجولات السابقة.',
+        {
+          currentRound: Number(message.currentRound),
+          totalRounds: Number(message.totalRounds),
+        },
+      );
     }
     sendResponse({ ok: true });
     return false;

@@ -29,16 +29,26 @@ function job(overrides: Partial<JobScanRecord> = {}): JobScanRecord {
     ocrText: null,
     evidence: ['مطور تطبيقات'],
     detectedAt: '2026-07-24T00:00:00.000Z',
+    reviewStatus: 'confirmed',
+    confidence: 0.9,
+    rawText: 'مطور تطبيقات',
+    authorName: null,
+    authorHandle: null,
+    publishedAt: null,
+    sourceItemId: null,
     ...overrides,
   };
 }
 
 describe('website-extension bridge contract', () => {
-  it('publishes the v1.5.1 primary website origin', () => {
-    expect(QADDEM_EXTENSION_VERSION).toBe('1.5.1');
+  it('publishes the v1.6 primary website origin and comprehensive scan depths', () => {
+    expect(QADDEM_EXTENSION_VERSION).toBe('1.6.0');
     expect(QADDEM_PRIMARY_WEB_ORIGIN).toBe(
       'https://qaddemweb-production.up.railway.app',
     );
+    expect(scanRoundsForDepth('quick')).toBe(6);
+    expect(scanRoundsForDepth('balanced')).toBe(12);
+    expect(scanRoundsForDepth('deep')).toBe(24);
   });
 
   it('accepts only exact allowlisted website origins', () => {
@@ -94,18 +104,14 @@ describe('website-extension bridge contract', () => {
     ).toBe(false);
   });
 
-  it('uses bounded scan rounds', () => {
-    expect(scanRoundsForDepth('quick')).toBe(4);
-    expect(scanRoundsForDepth('balanced')).toBe(7);
-    expect(scanRoundsForDepth('deep')).toBe(12);
-  });
-
-  it('deduplicates matching jobs and preserves contacts images and OCR', () => {
+  it('deduplicates matching jobs and preserves contacts images OCR and review metadata', () => {
     const result = dedupeJobRecords([
       job({
         emails: ['jobs@example.com'],
         imageUrls: ['https://images.example.com/job.jpg'],
         ocrStatus: 'not_requested',
+        reviewStatus: 'potential',
+        confidence: 0.65,
       }),
       job({
         sourceUrl: 'https://example.com/jobs/1?utm_source=x',
@@ -115,6 +121,8 @@ describe('website-extension bridge contract', () => {
         imageUrls: ['https://images.example.com/job-2.jpg'],
         ocrStatus: 'complete',
         ocrText: 'نص مستخرج من الصورة',
+        reviewStatus: 'confirmed',
+        confidence: 0.91,
       }),
     ]);
 
@@ -125,5 +133,24 @@ describe('website-extension bridge contract', () => {
     expect(result[0]?.imageUrls).toHaveLength(2);
     expect(result[0]?.ocrStatus).toBe('complete');
     expect(result[0]?.ocrText).toContain('مستخرج');
+    expect(result[0]?.reviewStatus).toBe('confirmed');
+    expect(result[0]?.confidence).toBe(0.91);
+  });
+
+  it('keeps multiple roles from one X post as separate results', () => {
+    const first = job({
+      sourcePlatform: 'x',
+      sourceUrl: 'https://x.com/jobs/status/123',
+      applyUrl: 'https://example.com/apply',
+      title: 'محاسب',
+    });
+    const second = job({
+      sourcePlatform: 'x',
+      sourceUrl: 'https://x.com/jobs/status/123',
+      applyUrl: 'https://example.com/apply',
+      title: 'مهندس',
+    });
+
+    expect(dedupeJobRecords([first, second])).toHaveLength(2);
   });
 });

@@ -90,7 +90,7 @@ jobs:
       - name: Upload Chrome extension artifact
         uses: actions/upload-artifact@v4
         with:
-          name: qaddem-chrome-extension-v1.5.1
+          name: qaddem-chrome-extension-v1.6.0
           path: apps/extension/dist
           if-no-files-found: error
           retention-days: 14
