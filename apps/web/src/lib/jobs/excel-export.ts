@@ -10,7 +10,7 @@ function xmlEscape(value: unknown): string {
 }
 
 function joinList(values: string[]): string {
-  return values.filter(Boolean).join(' | ');
+  return Array.isArray(values) ? values.filter(Boolean).join(' | ') : '';
 }
 
 function cell(value: unknown, styleId?: string): string {
@@ -18,39 +18,70 @@ function cell(value: unknown, styleId?: string): string {
   return `<Cell${style}><Data ss:Type="String">${xmlEscape(value)}</Data></Cell>`;
 }
 
+function reviewLabel(value: JobScanRecord['reviewStatus']): string {
+  return (
+    {
+      confirmed: 'واضحة',
+      potential: 'محتملة',
+      needs_ocr: 'تحتاج OCR',
+      incomplete: 'غير مكتملة',
+    }[value] ?? 'تحتاج مراجعة'
+  );
+}
+
 export function buildJobsExcelXml(jobs: JobScanRecord[]): string {
   const headers = [
+    'حالة المراجعة',
+    'درجة الثقة',
     'المسمى الوظيفي',
     'الشركة',
     'المدينة',
-    'الوصف',
+    'الناشر',
+    'معرف الناشر',
+    'تاريخ النشر',
+    'الوصف المنظم',
+    'النص الخام الكامل',
     'البريد الإلكتروني',
     'الجوال',
     'نماذج التقديم',
     'رابط التقديم',
     'رابط المصدر',
+    'معرف المنشور',
     'المنصة',
     'عدد الصور',
     'حالة OCR',
     'نص OCR',
     'تاريخ الاكتشاف',
   ];
-  const rows = jobs.map((job) => [
+
+  const rows = (jobs ?? []).map((job) => [
+    reviewLabel(job.reviewStatus),
+    `${Math.round(Number(job.confidence ?? 0) * 100)}%`,
     job.title ?? '',
     job.company ?? '',
     job.location ?? '',
+    job.authorName ?? '',
+    job.authorHandle ?? '',
+    job.publishedAt ?? '',
     job.description ?? '',
+    job.rawText ?? '',
     joinList(job.emails),
     joinList(job.phones),
     joinList(job.forms),
     job.applyUrl ?? '',
-    job.sourceUrl,
-    job.sourcePlatform,
-    String(job.imageUrls.length),
-    job.ocrStatus,
+    job.sourceUrl ?? '',
+    job.sourceItemId ?? '',
+    job.sourcePlatform ?? '',
+    String(job.imageUrls?.length ?? 0),
+    job.ocrStatus ?? '',
     job.ocrText ?? '',
-    job.detectedAt,
+    job.detectedAt ?? '',
   ]);
+
+  const headerRow = `<Row>${headers.map((header) => cell(header, 'Header')).join('')}</Row>`;
+  const dataRows = rows
+    .map((row) => `<Row>${row.map((value) => cell(value)).join('')}</Row>`)
+    .join('');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <?mso-application progid="Excel.Sheet"?>
@@ -63,20 +94,22 @@ export function buildJobsExcelXml(jobs: JobScanRecord[]): string {
   <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Top" ss:WrapText="1"/></Style>
   <Style ss:ID="Header"><Font ss:Bold="1"/><Interior ss:Color="#D1FAE5" ss:Pattern="Solid"/><Alignment ss:Horizontal="Center" ss:Vertical="Center"/></Style>
  </Styles>
- <Worksheet ss:Name="الوظائف">
+ <Worksheet ss:Name="جميع النتائج">
   <Table ss:DefaultColumnWidth="140">
-   <Row>${headers.map((header) => cell(header, 'Header')).join('')}</Row>
-   ${rows.map((row) => `<Row>${row.map((value) => cell(value)).join('')}</Row>`).join('')}
+   ${headerRow}
+   ${dataRows}
   </Table>
   <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
-   <DisplayRightToLeft/><FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane>
+   <DisplayRightToLeft/>
+   <FreezePanes/><FrozenNoSplit/><SplitHorizontal>1</SplitHorizontal><TopRowBottomPane>1</TopRowBottomPane><ActivePane>2</ActivePane>
   </WorksheetOptions>
  </Worksheet>
 </Workbook>`;
 }
 
 export function downloadJobsExcel(jobs: JobScanRecord[]): void {
-  const blob = new Blob([`\uFEFF${buildJobsExcelXml(jobs)}`], {
+  const xml = buildJobsExcelXml(jobs);
+  const blob = new Blob([`\uFEFF${xml}`], {
     type: 'application/vnd.ms-excel;charset=utf-8',
   });
   const url = URL.createObjectURL(blob);
