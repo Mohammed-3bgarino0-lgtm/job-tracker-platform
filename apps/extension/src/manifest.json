@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "قدّم AI - ماسح الوظائف",
+  "version": "1.4.0",
+  "description": "يربط موقع قدّم بالصفحات التي يفتحها المستخدم لاستخراج إعلانات الوظائف بموافقته.",
+  "minimum_chrome_version": "120",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "قدّم AI",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://haderksa.org/*",
+        "https://www.haderksa.org/*",
+        "https://qaddemweb-production.up.railway.app/*",
+        "http://localhost:3000/*"
+      ],
+      "js": [
+        "bridge-content.js"
+      ],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/contract.js",
+        "lib/contract-data.js"
+      ],
+      "matches": [
+        "https://haderksa.org/*",
+        "https://www.haderksa.org/*",
+        "https://qaddemweb-production.up.railway.app/*",
+        "http://localhost:3000/*"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@qaddem/extension",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "node scripts/check.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
