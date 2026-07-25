@@ -19,14 +19,18 @@ function cell(value: unknown, styleId?: string): string {
 }
 
 function reviewLabel(value: JobScanRecord['reviewStatus']): string {
-  return (
-    {
-      confirmed: 'واضحة',
-      potential: 'محتملة',
-      needs_ocr: 'تحتاج OCR',
-      incomplete: 'غير مكتملة',
-    }[value] ?? 'تحتاج مراجعة'
-  );
+  switch (value) {
+    case 'confirmed':
+      return 'واضحة';
+    case 'potential':
+      return 'محتملة';
+    case 'needs_ocr':
+      return 'تحتاج OCR';
+    case 'incomplete':
+      return 'غير مكتملة';
+    default:
+      return 'تحتاج مراجعة';
+  }
 }
 
 export function buildJobsExcelXml(jobs: JobScanRecord[]): string {
