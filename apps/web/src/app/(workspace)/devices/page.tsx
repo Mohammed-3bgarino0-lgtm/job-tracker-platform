@@ -5,20 +5,17 @@ import { PageHeader } from '@/components/ui/PageHeader';
 const channels = [
   {
     title: 'إضافة Chrome للكمبيوتر',
-    description:
-      'قراءة صفحات الوظائف المفتوحة، واستخراج البطاقات الظاهرة، وإرسال النتائج إلى الموقع بعد أمر صريح من المستخدم.',
-    status: 'نسخة أولية v1.4',
+    description: 'فحص الصفحات المفتوحة، معاينة النتائج، تصدير Excel، نقل آخر فحص إلى الموقع، وتحليل صور الإعلانات بعد موافقة صريحة.',
+    status: 'v1.5 متاحة للاختبار',
   },
   {
     title: 'تطبيق Android',
-    description:
-      'البحث والمشاركة والمتابعة، ثم خدمة تعبئة اختيارية يفعّلها المستخدم بنفسه.',
+    description: 'البحث والمشاركة والمتابعة، ثم خدمة تعبئة اختيارية يفعّلها المستخدم بنفسه.',
     status: 'مرحلة لاحقة',
   },
   {
     title: 'تطبيق iPhone وSafari Extension',
-    description:
-      'مشاركة الروابط والصور والمساعدة في تعبئة النماذج المفتوحة داخل Safari.',
+    description: 'مشاركة الروابط والصور والمساعدة في تعبئة النماذج المفتوحة داخل Safari.',
     status: 'مرحلة لاحقة',
   },
 ];
@@ -29,7 +26,7 @@ export default function DevicesPage() {
       <PageHeader
         eyebrow="الربط متعدد الأجهزة"
         title="الأجهزة والإضافات"
-        description="إدارة الأجهزة المصرح لها بمزامنة الوظائف وحزم التقديم، مع إمكانية إلغاء أي جهاز من الحساب."
+        description="إدارة أدوات اكتشاف الوظائف ونقل النتائج إلى مساحة العمل، مع موافقات صريحة وحدود واضحة لكل عملية."
       />
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -41,12 +38,8 @@ export default function DevicesPage() {
             <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black text-slate-600">
               {channel.status}
             </span>
-            <h2 className="mt-4 text-lg font-black text-slate-950">
-              {channel.title}
-            </h2>
-            <p className="mt-2 text-sm leading-7 text-slate-500">
-              {channel.description}
-            </p>
+            <h2 className="mt-4 text-lg font-black text-slate-950">{channel.title}</h2>
+            <p className="mt-2 text-sm leading-7 text-slate-500">{channel.description}</p>
           </section>
         ))}
       </div>
@@ -55,8 +48,8 @@ export default function DevicesPage() {
 
       <section className="mt-6">
         <EmptyState
-          title="لا توجد أجهزة مسجلة في الحساب"
-          description="الجسر المحلي يعمل دون إنشاء سجل جهاز. سيظهر الجهاز هنا بعد اكتمال تسجيل الدخول ورمز الربط والموافقة الصريحة."
+          title="لا توجد أجهزة مرتبطة بالحساب"
+          description="الإضافة تعمل حاليًا في وضع محلي للمراجعة والنقل. ربط الجهاز بحساب دائم سيُفعّل بعد اكتمال تسجيل الدخول والجلسات."
         />
       </section>
     </>
