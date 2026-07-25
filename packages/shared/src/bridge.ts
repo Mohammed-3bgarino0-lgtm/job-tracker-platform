@@ -2,11 +2,13 @@ import contract from './bridge-contract.json';
 
 export const QADDEM_BRIDGE_PROTOCOL = contract.protocol;
 export const QADDEM_EXTENSION_VERSION = contract.extensionVersion;
+export const QADDEM_PRIMARY_WEB_ORIGIN = contract.primaryWebOrigin;
 export const QADDEM_BRIDGE_MESSAGE_TYPES = contract.messageTypes;
 export const QADDEM_ALLOWED_WEB_ORIGINS = contract.allowedWebOrigins;
+export const QADDEM_BRIDGE_LIMITS = contract.limits;
 
 export type ScanDepth = keyof typeof contract.scanRounds;
-export type BridgeCommand = 'PING' | 'SCAN_URL' | 'CANCEL_SCAN';
+export type BridgeCommand = 'PING' | 'SCAN_URL' | 'CANCEL_SCAN' | 'GET_LAST_SCAN';
 export type BridgeResponseStatus =
   | 'ok'
   | 'error'
@@ -21,6 +23,11 @@ export type BridgeProgressStage =
   | 'permission_required'
   | 'cancelled'
   | 'error';
+export type JobOcrStatus =
+  | 'not_applicable'
+  | 'not_requested'
+  | 'complete'
+  | 'failed';
 
 export interface JobScanRecord {
   sourceUrl: string;
@@ -33,6 +40,9 @@ export interface JobScanRecord {
   emails: string[];
   phones: string[];
   forms: string[];
+  imageUrls: string[];
+  ocrStatus: JobOcrStatus;
+  ocrText: string | null;
   evidence: string[];
   detectedAt: string;
 }
@@ -44,6 +54,7 @@ export interface BridgeScanResult {
   roundsCompleted: number;
   partial: boolean;
   targetTabId?: number;
+  completedAt?: string;
 }
 
 export interface BridgeReadyMessage {
@@ -58,6 +69,13 @@ export type BridgeRequestMessage =
       protocol: typeof QADDEM_BRIDGE_PROTOCOL;
       requestId: string;
       command: 'PING';
+      payload?: undefined;
+    }
+  | {
+      messageType: typeof QADDEM_BRIDGE_MESSAGE_TYPES.request;
+      protocol: typeof QADDEM_BRIDGE_PROTOCOL;
+      requestId: string;
+      command: 'GET_LAST_SCAN';
       payload?: undefined;
     }
   | {
@@ -176,7 +194,7 @@ export function isBridgeRequestMessage(value: unknown): value is BridgeRequestMe
   if (value.protocol !== QADDEM_BRIDGE_PROTOCOL) return false;
   if (!isRequestId(value.requestId)) return false;
 
-  if (value.command === 'PING') return true;
+  if (value.command === 'PING' || value.command === 'GET_LAST_SCAN') return true;
   if (!isRecord(value.payload)) return false;
 
   if (value.command === 'SCAN_URL') {
@@ -262,10 +280,21 @@ export function dedupeJobRecords(records: JobScanRecord[]): JobScanRecord[] {
         emails: mergeUnique([], record.emails),
         phones: mergeUnique([], record.phones),
         forms: mergeUnique([], record.forms),
+        imageUrls: mergeUnique([], record.imageUrls),
         evidence: mergeUnique([], record.evidence),
       });
       continue;
     }
+
+    const imageUrls = mergeUnique(current.imageUrls, record.imageUrls);
+    const ocrStatus =
+      current.ocrStatus === 'complete' || record.ocrStatus === 'complete'
+        ? 'complete'
+        : imageUrls.length > 0
+          ? current.ocrStatus === 'failed' && record.ocrStatus === 'failed'
+            ? 'failed'
+            : 'not_requested'
+          : 'not_applicable';
 
     merged.set(key, {
       ...current,
@@ -280,6 +309,12 @@ export function dedupeJobRecords(records: JobScanRecord[]): JobScanRecord[] {
       emails: mergeUnique(current.emails, record.emails),
       phones: mergeUnique(current.phones, record.phones),
       forms: mergeUnique(current.forms, record.forms),
+      imageUrls,
+      ocrStatus,
+      ocrText:
+        (record.ocrText?.length ?? 0) > (current.ocrText?.length ?? 0)
+          ? record.ocrText
+          : current.ocrText,
       evidence: mergeUnique(current.evidence, record.evidence),
     });
   }
