@@ -22,12 +22,12 @@ const sharedContractPath = path.resolve(
 test('extension contract remains identical to shared website contract', async () => {
   const shared = JSON.parse(await readFile(sharedContractPath, 'utf8'));
   assert.deepEqual(CONTRACT_DATA, shared);
-  assert.equal(CONTRACT_DATA.extensionVersion, '1.6.0');
+  assert.equal(CONTRACT_DATA.extensionVersion, '1.7.0');
   assert.equal(PRIMARY_WEB_ORIGIN, 'https://qaddemweb-production.up.railway.app');
   assert.equal(roundsForDepth('quick'), 6);
   assert.equal(roundsForDepth('balanced'), 12);
   assert.equal(roundsForDepth('deep'), 24);
-  assert.equal(CONTRACT_DATA.limits.maxJobsPerScan, 250);
+  assert.equal(CONTRACT_DATA.limits.maxJobsPerScan, 400);
 });
 
 test('safe URL validation blocks internal networks and unsafe schemes', () => {
