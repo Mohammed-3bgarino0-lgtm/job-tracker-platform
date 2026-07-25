@@ -1,6 +1,6 @@
 {
   "protocol": "qaddem.bridge.v1",
-  "extensionVersion": "1.6.0",
+  "extensionVersion": "1.7.0",
   "primaryWebOrigin": "https://qaddemweb-production.up.railway.app",
   "messageTypes": {
     "ready": "QADDEM_BRIDGE_READY",
@@ -20,7 +20,7 @@
     "deep": 24
   },
   "limits": {
-    "maxJobsPerScan": 250,
+    "maxJobsPerScan": 400,
     "maxImagesPerJob": 4,
     "maxOcrJobsPerRequest": 12
   }
