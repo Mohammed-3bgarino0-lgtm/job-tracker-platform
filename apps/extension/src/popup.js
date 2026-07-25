@@ -1,10 +1,14 @@
 import {
+  BRIDGE_LIMITS,
   EXTENSION_VERSION,
   PRIMARY_WEB_ORIGIN,
+  dedupeJobs,
   permissionPatternForUrl,
+  safeScanUrl,
 } from './lib/contract.js';
 import { downloadJobsExcel } from './lib/excel-export.js';
 
+const LAST_SCAN_KEY = 'qaddemLastScan';
 const versionElement = document.querySelector('#version');
 const pendingCard = document.querySelector('#pending-card');
 const pendingOrigin = document.querySelector('#pending-origin');
@@ -132,6 +136,57 @@ async function refreshState() {
   }
 }
 
+async function scanCurrentPageWithActiveTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!Number.isInteger(tab?.id) || !tab.url) {
+    throw new Error('NO_ACTIVE_TAB');
+  }
+
+  const targetUrl = safeScanUrl(tab.url);
+  if (!targetUrl) {
+    throw new Error('UNSUPPORTED_PAGE');
+  }
+
+  await chrome.scripting.executeScript({
+    target: { tabId: tab.id },
+    files: ['scanner-content.js'],
+  });
+
+  const requestId = `popup_${crypto.randomUUID().replace(/-/g, '')}`;
+  const rawResult = await chrome.tabs.sendMessage(tab.id, {
+    internalType: 'QADDEM_SCANNER_RUN',
+    requestId,
+    rounds: 7,
+  });
+
+  if (rawResult?.cancelled) {
+    throw new Error('SCAN_CANCELLED');
+  }
+  if (rawResult?.error) {
+    throw new Error('SCANNER_FAILED');
+  }
+
+  const loadedTab = await chrome.tabs.get(tab.id);
+  const loadedUrl = safeScanUrl(loadedTab.url ?? targetUrl.toString());
+  if (!loadedUrl) {
+    throw new Error('UNSAFE_REDIRECT');
+  }
+
+  const jobs = dedupeJobs(rawResult?.jobs ?? []).slice(0, BRIDGE_LIMITS.maxJobsPerScan);
+  const lastScan = {
+    scannedUrl: loadedUrl.toString(),
+    jobs,
+    loginRequired: Boolean(rawResult?.loginRequired),
+    roundsCompleted: Number(rawResult?.roundsCompleted ?? 0),
+    partial: Boolean(rawResult?.partial),
+    targetTabId: tab.id,
+    completedAt: new Date().toISOString(),
+  };
+
+  await chrome.storage.local.set({ [LAST_SCAN_KEY]: lastScan });
+  return lastScan;
+}
+
 grantButton.addEventListener('click', async () => {
   if (!currentPending?.permissionOrigin) return;
   grantButton.disabled = true;
@@ -160,22 +215,26 @@ grantButton.addEventListener('click', async () => {
 
 scanCurrentButton.addEventListener('click', async () => {
   scanCurrentButton.disabled = true;
-  setStatus('جارٍ فحص الصفحة الحالية…');
+  setStatus('جارٍ فحص الصفحة الحالية باستخدام صلاحية التبويب النشط…');
 
   try {
-    const result = await chrome.runtime.sendMessage({
-      internalType: 'QADDEM_POPUP_SCAN_CURRENT',
-    });
-    if (!result?.ok) {
-      setStatus(result?.error ?? 'تعذر فحص الصفحة الحالية.', true);
-      return;
-    }
-
-    const count = result.response?.data?.jobs?.length ?? 0;
+    const lastScan = await scanCurrentPageWithActiveTab();
+    const count = lastScan.jobs.length;
     setStatus(`اكتمل الفحص وعُثر على ${count} نتيجة. راجع القائمة أدناه.`);
     await refreshState();
-  } catch {
-    setStatus('تعذر فحص الصفحة الحالية.', true);
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : 'UNKNOWN_ERROR';
+    const message =
+      reason === 'NO_ACTIVE_TAB'
+        ? 'لا توجد صفحة نشطة قابلة للفحص.'
+        : reason === 'UNSUPPORTED_PAGE'
+          ? 'هذه الصفحة غير قابلة للفحص. افتح صفحة ويب عامة تبدأ بـ http أو https.'
+          : reason === 'UNSAFE_REDIRECT'
+            ? 'تغير عنوان الصفحة إلى رابط غير مسموح بفحصه.'
+            : reason === 'SCAN_CANCELLED'
+              ? 'تم إلغاء الفحص.'
+              : 'تعذر الوصول إلى محتوى الصفحة. أعد تحميل الصفحة ثم افتح الإضافة واضغط الفحص مرة أخرى.';
+    setStatus(message, true);
   } finally {
     scanCurrentButton.disabled = false;
   }

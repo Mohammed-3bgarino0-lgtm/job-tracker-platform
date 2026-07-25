@@ -34,8 +34,8 @@ function job(overrides: Partial<JobScanRecord> = {}): JobScanRecord {
 }
 
 describe('website-extension bridge contract', () => {
-  it('publishes the v1.5 primary website origin', () => {
-    expect(QADDEM_EXTENSION_VERSION).toBe('1.5.0');
+  it('publishes the v1.5.1 primary website origin', () => {
+    expect(QADDEM_EXTENSION_VERSION).toBe('1.5.1');
     expect(QADDEM_PRIMARY_WEB_ORIGIN).toBe(
       'https://qaddemweb-production.up.railway.app',
     );

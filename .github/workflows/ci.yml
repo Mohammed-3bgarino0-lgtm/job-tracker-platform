@@ -68,54 +68,29 @@ jobs:
         run: pnpm db:generate
 
       - name: Typecheck
-        id: typecheck
-        continue-on-error: true
         shell: bash
         run: |
-          set +e
-          pnpm typecheck > typecheck.log 2>&1
-          status=$?
-          cat typecheck.log
-          exit $status
+          pnpm typecheck 2>&1 | tee typecheck.log
 
       - name: Run tests
-        id: tests
-        continue-on-error: true
         shell: bash
         run: |
-          set +e
-          pnpm test > tests.log 2>&1
-          status=$?
-          cat tests.log
-          exit $status
+          pnpm test 2>&1 | tee tests.log
 
       - name: Build web application
-        id: build
-        continue-on-error: true
         shell: bash
         run: |
-          set +e
-          pnpm --filter @qaddem/web build > build.log 2>&1
-          status=$?
-          cat build.log
-          exit $status
+          pnpm --filter @qaddem/web build 2>&1 | tee build.log
 
       - name: Build Chrome extension
-        id: extension
-        continue-on-error: true
         shell: bash
         run: |
-          set +e
-          pnpm extension:build > extension-build.log 2>&1
-          status=$?
-          cat extension-build.log
-          exit $status
+          pnpm extension:build 2>&1 | tee extension-build.log
 
       - name: Upload Chrome extension artifact
-        if: steps.extension.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
-          name: qaddem-chrome-extension-v1.5.0
+          name: qaddem-chrome-extension-v1.5.1
           path: apps/extension/dist
           if-no-files-found: error
           retention-days: 14
@@ -132,26 +107,3 @@ jobs:
             extension-build.log
           if-no-files-found: ignore
           retention-days: 3
-
-      - name: Enforce successful checks
-        if: always()
-        shell: bash
-        run: |
-          failed=0
-          if [[ "${{ steps.typecheck.outcome }}" == "failure" ]]; then
-            echo "Typecheck failed"
-            failed=1
-          fi
-          if [[ "${{ steps.tests.outcome }}" == "failure" ]]; then
-            echo "Tests failed"
-            failed=1
-          fi
-          if [[ "${{ steps.build.outcome }}" == "failure" ]]; then
-            echo "Web build failed"
-            failed=1
-          fi
-          if [[ "${{ steps.extension.outcome }}" == "failure" ]]; then
-            echo "Extension build failed"
-            failed=1
-          fi
-          exit "$failed"

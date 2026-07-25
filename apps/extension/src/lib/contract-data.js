@@ -1,6 +1,6 @@
 export const CONTRACT_DATA = Object.freeze({
   protocol: 'qaddem.bridge.v1',
-  extensionVersion: '1.5.0',
+  extensionVersion: '1.5.1',
   primaryWebOrigin: 'https://qaddemweb-production.up.railway.app',
   messageTypes: Object.freeze({
     ready: 'QADDEM_BRIDGE_READY',

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "قدّم AI - ماسح الوظائف",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "يفحص صفحات الوظائف المفتوحة، يعرض النتائج، ينقلها إلى موقع قدّم، ويحلل صور الإعلانات بعد موافقة المستخدم.",
   "minimum_chrome_version": "120",
   "permissions": [

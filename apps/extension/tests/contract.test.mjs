@@ -20,7 +20,7 @@ const sharedContractPath = path.resolve(
 test('extension contract remains identical to shared website contract', async () => {
   const shared = JSON.parse(await readFile(sharedContractPath, 'utf8'));
   assert.deepEqual(CONTRACT_DATA, shared);
-  assert.equal(CONTRACT_DATA.extensionVersion, '1.5.0');
+  assert.equal(CONTRACT_DATA.extensionVersion, '1.5.1');
   assert.equal(PRIMARY_WEB_ORIGIN, 'https://qaddemweb-production.up.railway.app');
 });
 
