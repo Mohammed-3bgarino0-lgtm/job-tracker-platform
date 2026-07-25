@@ -6,13 +6,19 @@
 })(globalThis, function createScanner() {
   const JOB_SIGNAL_PATTERN =
     /(?:وظيف|شاغر|توظيف|مطلوب|فرصة\s+عمل|career|vacanc|hiring|job|apply)/iu;
+  const NON_JOB_CONTEXT_PATTERN =
+    /(?:لا\s+يتعلق\s+(?:ب|بـ)?\s*(?:التوظيف|الوظائف|التقديم)|ليس\s+(?:هذا\s+)?(?:إعلان\s+)?(?:وظيفة|فرصة\s+عمل)|not\s+(?:a\s+)?(?:job|vacancy|hiring)\b)/iu;
   const APPLY_TEXT_PATTERN =
     /(?:تقديم|قدّم|قدم الآن|التقديم|apply|easy apply|submit application)/iu;
+  const JOB_URL_PATTERN =
+    /(?:\/status\/\d+|\/jobs?\/view\/|\/jobs?\/|\/careers?\/|\/vacanc(?:y|ies)\/)/i;
   const EMAIL_PATTERN = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
   const PHONE_PATTERN =
     /(?:\+?9665|05|\+?967|\+?971|\+?965|\+?968|\+?973)[0-9\s-]{7,12}/g;
   const FORM_PATTERN =
     /https?:\/\/(?:docs\.google\.com\/forms|forms\.gle|(?:www\.)?typeform\.com)\/[^\s]+/gi;
+  const FORM_URL_PATTERN =
+    /^https?:\/\/(?:docs\.google\.com\/forms|forms\.gle|(?:www\.)?typeform\.com)\//i;
   const cancelledRequests = new Set();
 
   function normalizeText(value) {
@@ -36,6 +42,11 @@
     );
   }
 
+  function hasPositiveJobSignal(value) {
+    const text = normalizeText(value);
+    return JOB_SIGNAL_PATTERN.test(text) && !NON_JOB_CONTEXT_PATTERN.test(text);
+  }
+
   function absoluteUrl(value, baseUrl) {
     try {
       const parsed = new URL(value, baseUrl);
@@ -50,7 +61,11 @@
   function detectSourcePlatform(input) {
     try {
       const hostname = new URL(input).hostname.toLowerCase();
-      if (hostname === 'x.com' || hostname.endsWith('.x.com') || hostname.includes('twitter.com')) {
+      if (
+        hostname === 'x.com' ||
+        hostname.endsWith('.x.com') ||
+        hostname.includes('twitter.com')
+      ) {
         return 'x';
       }
       if (hostname.includes('linkedin.com')) return 'linkedin';
@@ -105,26 +120,31 @@
     const phones = unique(text.match(PHONE_PATTERN) ?? []);
     const forms = unique([
       ...(text.match(FORM_PATTERN) ?? []),
-      ...linkUrls.filter((link) => FORM_PATTERN.test(link)),
+      ...linkUrls.filter((link) => FORM_URL_PATTERN.test(link)),
     ]);
-    FORM_PATTERN.lastIndex = 0;
+    const explicitTitle = findExplicitTitle(snapshot.rawText ?? text);
+    const structuredTitles = unique(snapshot.titleTexts ?? [])
+      .map((value) => clip(value, 180))
+      .filter(Boolean);
+    const statusOrJobUrl = linkUrls.find((link) => JOB_URL_PATTERN.test(link));
+    const applyLink = chooseLink(links, APPLY_TEXT_PATTERN);
+    const hasApplicationEvidence = Boolean(applyLink || forms.length > 0);
 
     if (
-      !JOB_SIGNAL_PATTERN.test(text) &&
-      emails.length === 0 &&
-      phones.length === 0 &&
-      forms.length === 0
+      !hasPositiveJobSignal(text) &&
+      !explicitTitle &&
+      structuredTitles.length === 0 &&
+      !statusOrJobUrl &&
+      !hasApplicationEvidence
     ) {
       return null;
     }
 
-    const selectorTitle = unique(snapshot.titleTexts ?? [])
-      .map((value) => clip(value, 180))
-      .find(Boolean);
+    const selectorTitle = structuredTitles[0] ?? null;
     const headingTitle = unique(snapshot.headingTexts ?? [])
       .map((value) => clip(value, 180))
-      .find((value) => value && JOB_SIGNAL_PATTERN.test(value));
-    const title = selectorTitle ?? findExplicitTitle(snapshot.rawText ?? text) ?? headingTitle ?? null;
+      .find((value) => value && hasPositiveJobSignal(value));
+    const title = selectorTitle ?? explicitTitle ?? headingTitle ?? null;
     const company =
       unique(snapshot.companyTexts ?? [])
         .map((value) => clip(value, 180))
@@ -134,14 +154,8 @@
         .map((value) => clip(value, 180))
         .find(Boolean) ?? null;
 
-    const statusOrJobUrl = linkUrls.find((link) =>
-      /(?:\/status\/\d+|\/jobs?\/view\/|\/jobs?\/|\/careers?\/|\/vacanc(?:y|ies)\/)/i.test(
-        link,
-      ),
-    );
     const sourceUrl = statusOrJobUrl ?? pageUrl;
-    const applyUrl =
-      chooseLink(links, APPLY_TEXT_PATTERN) ?? forms[0] ?? null;
+    const applyUrl = applyLink ?? forms[0] ?? null;
 
     return {
       sourceUrl,
@@ -162,7 +176,9 @@
   function textValues(element, selectors) {
     return unique(
       selectors.flatMap((selector) =>
-        Array.from(element.querySelectorAll(selector)).map((node) => node.textContent),
+        Array.from(element.querySelectorAll(selector)).map(
+          (node) => node.textContent,
+        ),
       ),
     );
   }
@@ -224,7 +240,11 @@
     if (candidates.size < 200) {
       for (const element of documentObject.querySelectorAll('article, main li')) {
         const text = normalizeText(element.textContent);
-        if (text.length >= 40 && text.length <= 12_000 && JOB_SIGNAL_PATTERN.test(text)) {
+        if (
+          text.length >= 40 &&
+          text.length <= 12_000 &&
+          hasPositiveJobSignal(text)
+        ) {
           candidates.add(element);
         }
         if (candidates.size >= 200) break;
@@ -234,7 +254,9 @@
     if (candidates.size === 0) {
       const main = documentObject.querySelector('main');
       const text = normalizeText(main?.textContent);
-      if (main && text.length >= 40 && JOB_SIGNAL_PATTERN.test(text)) candidates.add(main);
+      if (main && text.length >= 40 && hasPositiveJobSignal(text)) {
+        candidates.add(main);
+      }
     }
 
     return Array.from(candidates);
@@ -242,7 +264,9 @@
 
   function extractJobRecords(documentObject, pageUrl) {
     return collectCandidateElements(documentObject)
-      .map((element) => parseCandidateSnapshot(candidateSnapshot(element), pageUrl))
+      .map((element) =>
+        parseCandidateSnapshot(candidateSnapshot(element), pageUrl),
+      )
       .filter(Boolean)
       .slice(0, 150);
   }
@@ -325,7 +349,11 @@
     return {
       cancelled: false,
       jobs,
-      loginRequired: detectLoginRequired(document, window.location.href, jobs.length),
+      loginRequired: detectLoginRequired(
+        document,
+        window.location.href,
+        jobs.length,
+      ),
       roundsCompleted,
       partial: roundsCompleted < rounds,
     };
