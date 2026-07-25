@@ -2,8 +2,10 @@ import { CONTRACT_DATA } from './contract-data.js';
 
 export const BRIDGE_PROTOCOL = CONTRACT_DATA.protocol;
 export const EXTENSION_VERSION = CONTRACT_DATA.extensionVersion;
+export const PRIMARY_WEB_ORIGIN = CONTRACT_DATA.primaryWebOrigin;
 export const MESSAGE_TYPES = CONTRACT_DATA.messageTypes;
 export const ALLOWED_WEB_ORIGINS = CONTRACT_DATA.allowedWebOrigins;
+export const BRIDGE_LIMITS = CONTRACT_DATA.limits;
 
 function isRecord(value) {
   return typeof value === 'object' && value !== null;
@@ -85,7 +87,7 @@ export function isBridgeRequest(value) {
   if (value.protocol !== BRIDGE_PROTOCOL) return false;
   if (!isRequestId(value.requestId)) return false;
 
-  if (value.command === 'PING') return true;
+  if (value.command === 'PING' || value.command === 'GET_LAST_SCAN') return true;
   if (!isRecord(value.payload)) return false;
 
   if (value.command === 'SCAN_URL') {
@@ -143,11 +145,16 @@ export function dedupeJobs(records) {
   const merged = new Map();
 
   for (const rawRecord of records ?? []) {
+    const imageUrls = cleanList(rawRecord.imageUrls);
     const record = {
       ...rawRecord,
       emails: cleanList(rawRecord.emails),
       phones: cleanList(rawRecord.phones),
       forms: cleanList(rawRecord.forms),
+      imageUrls,
+      ocrStatus:
+        rawRecord.ocrStatus ?? (imageUrls.length > 0 ? 'not_requested' : 'not_applicable'),
+      ocrText: rawRecord.ocrText ?? null,
       evidence: cleanList(rawRecord.evidence),
     };
     const urlKey = canonicalUrl(record.applyUrl) ?? canonicalUrl(record.sourceUrl);
@@ -163,6 +170,7 @@ export function dedupeJobs(records) {
       continue;
     }
 
+    const mergedImages = cleanList([...current.imageUrls, ...record.imageUrls]);
     merged.set(key, {
       ...current,
       title: current.title ?? record.title,
@@ -177,6 +185,19 @@ export function dedupeJobs(records) {
       emails: cleanList([...current.emails, ...record.emails]),
       phones: cleanList([...current.phones, ...record.phones]),
       forms: cleanList([...current.forms, ...record.forms]),
+      imageUrls: mergedImages,
+      ocrStatus:
+        current.ocrStatus === 'complete' || record.ocrStatus === 'complete'
+          ? 'complete'
+          : mergedImages.length > 0
+            ? current.ocrStatus === 'failed' && record.ocrStatus === 'failed'
+              ? 'failed'
+              : 'not_requested'
+            : 'not_applicable',
+      ocrText:
+        String(record.ocrText ?? '').length > String(current.ocrText ?? '').length
+          ? record.ocrText
+          : current.ocrText,
       evidence: cleanList([...current.evidence, ...record.evidence]),
     });
   }
